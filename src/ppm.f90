@@ -30,8 +30,8 @@
     ! PPM.f90: 1d slope-limited, piecewise parabolic recon.
     !
     ! Darren Engwirda 
-    ! 08-Sep-2016
-    ! de2363 [at] columbia [dot] edu
+    ! 03-Jul-2020
+    ! d [dot] engwirda [at] gmail [dot] com
     !
     !
   
@@ -68,24 +68,24 @@
         implicit none
 
     !------------------------------------------- arguments !
-        integer, intent(in)  :: npos,nvar,ndof
-        real*8 , intent(in)  :: dmin
-        real*8 , intent(out) :: fhat(:,:,:)
-        real*8 , intent(in)  :: oscl(:,:,:)
-        real*8 , intent(in)  :: delx(:)
-        real*8 , intent(in)  :: fdat(:,:,:)
-        real*8 , intent(in)  :: edge(:,:)
-        integer, intent(in)  :: ilim,wlim,halo
+        integer      , intent(in)  :: npos,nvar,ndof
+        real(kind=dp), intent(in)  :: dmin
+        real(kind=dp), intent(out) :: fhat(:,:,:)
+        real(kind=dp), intent(in)  :: oscl(:,:,:)
+        real(kind=dp), intent(in)  :: delx(:)
+        real(kind=dp), intent(in)  :: fdat(:,:,:)
+        real(kind=dp), intent(in)  :: edge(:,:)
+        integer      , intent(in)  :: ilim,wlim,halo
 
     !------------------------------------------- variables !
-        integer :: ipos,ivar,iill,iirr,head,tail
-        real*8  :: ff00,ffll,ffrr,hh00,hhll,hhrr
-        integer :: mono
-        real*8  :: fell,ferr
-        real*8  :: dfds(-1:+1)
-        real*8  :: wval(+1:+2)
-        real*8  :: uhat(+1:+3)
-        real*8  :: lhat(+1:+3)
+        integer       :: ipos,ivar,iill,iirr,head,tail
+        real(kind=dp) :: ff00,ffll,ffrr,hh00,hhll,hhrr
+        integer       :: mono
+        real(kind=dp) :: fell,ferr
+        real(kind=dp) :: dfds(-1:+1)
+        real(kind=dp) :: wval(+1:+2)
+        real(kind=dp) :: uhat(+1:+3)
+        real(kind=dp) :: lhat(+1:+3)
         
         head = +1; tail = npos - 1
 
@@ -241,16 +241,16 @@
         implicit none
 
     !------------------------------------------- arguments !
-        real*8 , intent(in)    :: ff00
-        real*8 , intent(in)    :: ffll,ffrr
-        real*8 , intent(inout) :: fell,ferr
-        real*8 , intent(in)    :: dfds(-1:+1)
-        real*8 , intent(out)   :: uhat(+1:+3)
-        real*8 , intent(out)   :: lhat(+1:+3)
-        integer, intent(out)   :: mono
+        real(kind=dp), intent(in)    :: ff00
+        real(kind=dp), intent(in)    :: ffll,ffrr
+        real(kind=dp), intent(inout) :: fell,ferr
+        real(kind=dp), intent(in)    :: dfds(-1:+1)
+        real(kind=dp), intent(out)   :: uhat(+1:+3)
+        real(kind=dp), intent(out)   :: lhat(+1:+3)
+        integer      , intent(out)   :: mono
           
     !------------------------------------------- variables !
-        real*8  :: turn
+        real(kind=dp)   :: turn,fmid,fmin,fmax
         
         mono  = 0
         
@@ -321,12 +321,23 @@
         turn = -0.5d+0 * lhat(2) &
     &                  / lhat(3)
 
+        fmid = lhat(1) + lhat(2) * turn**1 &
+    &                  + lhat(3) * turn**2
+
+        fmin = min(ffll,ffrr)
+        fmax = max(ffll,ffrr)
+
+        if ((fmid .le. fmax)& 
+    &  .and.(fmid .ge. fmin)) return
+
         if ((turn .ge. -1.d+0)&
     &  .and.(turn .le. +0.d+0)) then
 
         mono =   +2
 
     !--------------------------- push TURN onto lower edge !
+
+        fell =              ffll
 
         ferr =   +3.0d+0  * ff00 &
     &            -2.0d+0  * fell
@@ -347,7 +358,9 @@
         mono =   +2
 
     !--------------------------- push TURN onto upper edge !
-    
+
+        ferr =              ffrr
+
         fell =   +3.0d+0  * ff00 &
     &            -2.0d+0  * ferr
 

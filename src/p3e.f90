@@ -31,7 +31,7 @@
     !
     ! Darren Engwirda 
     ! 09-Sep-2016
-    ! de2363 [at] columbia [dot] edu
+    ! d [dot] engwirda [at] gmail [dot] com
     !
     !
     
@@ -60,28 +60,29 @@
         implicit none
 
     !------------------------------------------- arguments !
-        integer, intent( in) :: npos,nvar,ndof
-        real*8 , intent( in) :: delx(:)
-        real*8 , intent( in) :: fdat(:,:,:)
-        type (rcon_ends), intent(in) :: bclo(:)
-        type (rcon_ends), intent(in) :: bchi(:)
-        real*8 , intent(out) :: edge(:,:)
-        real*8 , intent(out) :: dfdx(:,:)
-        real*8 , intent( in) :: dmin
-        class(rcon_opts), intent(in) :: opts
+        integer         , intent(in)    :: npos,nvar,ndof
+        real(kind=dp)   , intent(in)    :: delx(:)
+        real(kind=dp)   , intent(in)    :: fdat(:,:,:)
+        type (rcon_ends), intent(in)    :: bclo(:)
+        type (rcon_ends), intent(in)    :: bchi(:)
+        real(kind=dp)   , intent(out)   :: edge(:,:)
+        real(kind=dp)   , intent(out)   :: dfdx(:,:)
+        real(kind=dp)   , intent(in)    :: dmin
+        class(rcon_opts), intent(in)    :: opts
 
     !------------------------------------------- variables !
-        integer :: ipos,ivar,idof,head,tail
-        logical :: okay
-        real*8  :: xhat,fEPS
-        real*8  :: delh(-2:+1)
-        real*8  :: xmap(-2:+2)
-        real*8  :: fhat(+4, nvar)
-        real*8  :: ivec(+4,-2:+2)
-        real*8  :: cmat(+4,+4)
+        integer                         :: ipos,ivar,idof
+        integer                         :: head,tail
+        logical                         :: okay
+        real(kind=dp)                   :: xhat,fEPS
+        real(kind=dp)                   :: delh(-2:+1)
+        real(kind=dp)                   :: xmap(-2:+2)
+        real(kind=dp)                   :: fhat(+4, nvar)
+        real(kind=dp)                   :: ivec(+4,-2:+2)
+        real(kind=dp)                   :: cmat(+4,+4)
         
-        integer, parameter :: NSIZ = +4
-        real*8 , parameter :: ZERO = 1.d-14  
+        integer      , parameter :: NSIZ = +4
+        real(kind=dp), parameter :: ZERO = +1.d-14  
    
         head = +3 ; tail = npos - 2
 
@@ -240,7 +241,7 @@
 
     !------------------------- fallback if system singular !
 
-#           ifdef __PPR_WARNMAT__
+#           ifdef __PPR_PIVOT__
             
             write(*,*) &
     &   "WARNING::P3E - matrix-is-singular!"

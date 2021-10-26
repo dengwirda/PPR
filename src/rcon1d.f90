@@ -31,7 +31,7 @@
     !
     ! Darren Engwirda 
     ! 07-Sep-2016
-    ! de2363 [at] columbia [dot] edu
+    ! d [dot] engwirda [at] gmail [dot] com
     !
     !
     
@@ -59,23 +59,23 @@
         implicit none
 
     !------------------------------------------- arguments !
-        integer, intent( in) :: npos,nvar,ndof
-        class(rcon_work), intent(inout):: work
-        class(rcon_opts), intent(in)   :: opts
-        real*8 , intent( in) :: delx(:)
-        real*8 , intent(out) :: fhat(:,:,:)
-        real*8 , intent( in) :: fdat(:,:,:)
-        type (rcon_ends), intent(in) :: bclo(:)
-        type (rcon_ends), intent(in) :: bchi(:)
+        integer, intent(in)             :: npos,nvar,ndof
+        class(rcon_work), intent(inout) :: work
+        class(rcon_opts), intent(in)    :: opts
+        real(kind=dp)   , intent(in)    :: delx(:)
+        real(kind=dp)   , intent(out)   :: fhat(:,:,:)
+        real(kind=dp)   , intent(in)    :: fdat(:,:,:)
+        type (rcon_ends), intent(in)    :: bclo(:)
+        type (rcon_ends), intent(in)    :: bchi(:)
         type (rmap_tics), &
-        &   intent(inout) , optional :: tCPU
+        &   intent(inout) , optional    :: tCPU
 
     !------------------------------------------- variables !
-        integer :: halo,ipos
-        real*8  :: dmin,dmid
+        integer                         :: halo,ipos
+        real(kind=dp)                   :: dmin,dmid
 
 #       ifdef __PPR_TIMER__
-        integer(kind=8) :: ttic,ttoc,rate
+        integer(kind=8)                 :: ttic,ttoc,rate
 #       endif
 
         if (ndof.lt.1) return
@@ -156,7 +156,7 @@
      
         end if
     
-        __TOC__(time,oscl_time)
+        __TOC__(tCPU,oscl_time)
 
     !-------------------------- compute grid-cell profiles !
 

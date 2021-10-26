@@ -31,7 +31,7 @@
     !
     ! Darren Engwirda 
     ! 09-Sep-2016
-    ! de2363 [at] columbia [dot] edu
+    ! d [dot] engwirda [at] gmail [dot] com
     !
     !
 
@@ -60,17 +60,18 @@
         implicit none
 
     !------------------------------------------- arguments !
-        integer, intent( in) :: npos,nvar,ndof
-        real*8 , intent( in) :: delx(:)
-        real*8 , intent( in) :: fdat(:,:,:)
-        real*8 , intent(out) :: edge(:,:)
-        real*8 , intent(out) :: dfdx(:,:)
-        integer, intent( in) :: iend
-        real*8 , intent( in) :: dmin
-        type(rcon_ends), intent(in) :: bcon(:)
+        integer        , intent(in)     :: npos,nvar,ndof
+        real(kind=dp)  , intent(in)     :: delx(:)
+        real(kind=dp)  , intent(in)     :: fdat(:,:,:)
+        real(kind=dp)  , intent(out)    :: edge(:,:)
+        real(kind=dp)  , intent(out)    :: dfdx(:,:)
+        integer        , intent(in)     :: iend
+        real(kind=dp)  , intent(in)     :: dmin
+        type(rcon_ends), intent(in)     :: bcon(:)
 
     !------------------------------------------- variables !
-        integer :: ivar,nlse,nval,nslp
+        integer                         :: ivar
+        integer                         :: nlse,nval,nslp
 
         nlse = 0 ; nval = 0 ; nslp = 0
 
@@ -186,31 +187,31 @@
         implicit none
 
     !------------------------------------------- arguments !
-        integer, intent( in) :: npos,nvar,ndof
-        integer, intent( in) :: bopt
-        real*8 , intent( in) :: delx(:)
-        real*8 , intent( in) :: fdat(:,:,:)
-        real*8 , intent(out) :: edge(:,:)
-        real*8 , intent(out) :: dfdx(:,:)
-        real*8 , intent( in) :: dmin
-        type(rcon_ends), intent(in) :: bcon(:)
+        integer        , intent(in)     :: npos,nvar,ndof
+        integer        , intent(in)     :: bopt
+        real(kind=dp)  , intent(in)     :: delx(:)
+        real(kind=dp)  , intent(in)     :: fdat(:,:,:)
+        real(kind=dp)  , intent(out)    :: edge(:,:)
+        real(kind=dp)  , intent(out)    :: dfdx(:,:)
+        real(kind=dp)  , intent(in)     :: dmin
+        type(rcon_ends), intent(in)     :: bcon(:)
 
     !------------------------------------------- variables !
-        integer :: ivar,idof,isel, &
-        &          head,tail,nsel
-        logical :: okay        
-        real*8  :: xhat
-        real*8  :: delh(-1:+1)
-        real*8  :: xmap(-1:+2)
-        real*8  :: bvec(+3,-1:+2)
-        real*8  :: gvec(+3,-1:+2)
-        real*8  :: cmat(+3,+3)
-        real*8  :: fhat(+3, nvar)
-        real*8  :: eval(-1:+2)
-        real*8  :: gval(-1:+2)
+        integer                         :: ivar,idof,isel
+        integer                         :: head,tail,nsel
+        logical                         :: okay        
+        real(kind=dp)                   :: xhat
+        real(kind=dp)                   :: delh(-1:+1)
+        real(kind=dp)                   :: xmap(-1:+2)
+        real(kind=dp)                   :: bvec(+3,-1:+2)
+        real(kind=dp)                   :: gvec(+3,-1:+2)
+        real(kind=dp)                   :: cmat(+3,+3)
+        real(kind=dp)                   :: fhat(+3, nvar)
+        real(kind=dp)                   :: eval(-1:+2)
+        real(kind=dp)                   :: gval(-1:+2)
         
-        integer, parameter :: NSIZ = +3
-        real*8 , parameter :: ZERO = +1.d-14  
+        integer      , parameter :: NSIZ = +3
+        real(kind=dp), parameter :: ZERO = +1.d-14  
 
         head = +2; tail = npos - 2
 
@@ -386,7 +387,7 @@
 
         if (okay .eqv..false.) then
 
-#       ifdef __PPR_WARNMAT__
+#       ifdef __PPR_PIVOT__
         
         write(*,*) &
         &   "WARNING::LBC-matrix-is-singular!"
@@ -517,31 +518,31 @@
         implicit none
 
     !------------------------------------------- arguments !
-        integer, intent( in) :: npos,nvar,ndof
-        integer, intent( in) :: bopt
-        real*8 , intent( in) :: delx(:)
-        real*8 , intent( in) :: fdat(:,:,:)
-        real*8 , intent(out) :: edge(:,:)
-        real*8 , intent(out) :: dfdx(:,:)
-        real*8 , intent( in) :: dmin
-        type(rcon_ends), intent(in) :: bcon(:)
+        integer        , intent(in)     :: npos,nvar,ndof
+        integer        , intent(in)     :: bopt
+        real(kind=dp)  , intent(in)     :: delx(:)
+        real(kind=dp)  , intent(in)     :: fdat(:,:,:)
+        real(kind=dp)  , intent(out)    :: edge(:,:)
+        real(kind=dp)  , intent(out)    :: dfdx(:,:)
+        real(kind=dp)  , intent(in)     :: dmin
+        type(rcon_ends), intent(in)     :: bcon(:)
 
     !------------------------------------------- variables !
-        integer :: ivar,idof,isel, &
-        &          head,tail,nsel
-        logical :: okay
-        real*8  :: xhat
-        real*8  :: delh(-1:+1)
-        real*8  :: xmap(-1:+2)
-        real*8  :: bvec(+3,-1:+2)
-        real*8  :: gvec(+3,-1:+2)
-        real*8  :: cmat(+3,+3)
-        real*8  :: fhat(+3, nvar)
-        real*8  :: eval(-1:+2)
-        real*8  :: gval(-1:+2)
+        integer                         :: ivar,idof,isel
+        integer                         :: head,tail,nsel
+        logical                         :: okay
+        real(kind=dp)                   :: xhat
+        real(kind=dp)                   :: delh(-1:+1)
+        real(kind=dp)                   :: xmap(-1:+2)
+        real(kind=dp)                   :: bvec(+3,-1:+2)
+        real(kind=dp)                   :: gvec(+3,-1:+2)
+        real(kind=dp)                   :: cmat(+3,+3)
+        real(kind=dp)                   :: fhat(+3, nvar)
+        real(kind=dp)                   :: eval(-1:+2)
+        real(kind=dp)                   :: gval(-1:+2)
 
-        integer, parameter :: NSIZ = +3
-        real*8 , parameter :: ZERO = +1.d-14
+        integer      , parameter :: NSIZ = +3
+        real(kind=dp), parameter :: ZERO = +1.d-14
 
         head = +2; tail = npos - 2
 
@@ -717,7 +718,7 @@
 
         if (okay .eqv..false.) then
 
-#       ifdef __PPR_WARNMAT__
+#       ifdef __PPR_PIVOT__
         
         write(*,*) &
         &   "WARNING::UBC-matrix-is-singular!"

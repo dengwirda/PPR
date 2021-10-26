@@ -30,8 +30,8 @@
     ! RMAP1D.f90: high-order integral re-mapping operators.
     !
     ! Darren Engwirda 
-    ! 31-Mar-2019
-    ! ​de2363 [at] columbia [dot] edu
+    ! 25-Oct-2021
+    ! ​d [dot] engwirda [at] gmail [dot] com
     !
     !
 
@@ -62,29 +62,94 @@
         implicit none
 
     !------------------------------------------- arguments !
-        integer, intent( in) :: npos,nnew
-        integer, intent( in) :: nvar,ndof
-        class(rmap_work), intent(inout):: work
-        class(rmap_opts), intent(inout):: opts
-        real*8 , intent( in) :: xpos(:)
-        real*8 , intent( in) :: xnew(:)
-        real*8 , intent( in) :: fdat(:,:,:)
-        real*8 , intent(out) :: fnew(:,:,:)
-        type (rcon_ends), intent(in) :: bclo(:)
-        type (rcon_ends), intent(in) :: bcup(:)
+        integer         , intent(in)    :: npos,nnew
+        integer         , intent(in)    :: nvar,ndof
+        class(rmap_work), intent(inout) :: work
+        class(rmap_opts), intent(inout) :: opts
+        real(kind=dp)   , intent(in)    :: xpos(:)
+        real(kind=dp)   , intent(in)    :: xnew(:)
+        real(kind=dp)   , intent(in)    :: fdat(:,:,:)
+        real(kind=dp)   , intent(out)   :: fnew(:,:,:)
+        type (rcon_ends), intent(in)    :: bclo(:)
+        type (rcon_ends), intent(in)    :: bcup(:)
         type (rmap_tics), &
-        &   intent(inout) , optional :: tCPU
+        &   intent(inout) , optional    :: tCPU
 
-        real*8 , parameter :: RTOL = +1.d-14
+        if (xpos(npos) .ge. xpos(1)) then       ! +ve xdir
+
+        call _map1d(npos,nnew,nvar,ndof, &
+        &           xpos(+1:npos:+1), &
+        &           xnew(+1:nnew:+1), &
+        &           fdat(:,:,+1:npos-1:+1), &
+        &           fnew(:,:,+1:nnew-1:+1), &
+        &           bclo,bcup,work,opts,tCPU)
+
+        else                                    ! -ve xdir
+
+        call _map1d(npos,nnew,nvar,ndof, &
+        &           xpos(npos:+1:-1), &
+        &           xnew(nnew:+1:-1), &
+        &           fdat(:,:,npos-1:+1:-1), &
+        &           fnew(:,:,nnew-1:+1:-1), &
+        &           bcup,bclo,work,opts,tCPU)   ! bc. flip
+
+        end if
+
+        return
+
+    end  subroutine
+
+    subroutine _map1d(npos,nnew,nvar,ndof,xpos, &
+        &             xnew,fdat,fnew,bclo,bcup, &
+        &             work,opts,tCPU)
+
+    !
+    ! NPOS  no. edges in old grid.
+    ! NNEW  no. edges in new grid.
+    ! NVAR  no. discrete variables to remap.
+    ! NDOF  no. degrees-of-freedom per cell.
+    ! XPOS  old grid edge positions. XPOS is a length NPOS
+    !       array .
+    ! XNEW  new grid edge positions. XNEW is a length NNEW
+    !       array .
+    ! FDAT  grid-cell moments on old grid. FNEW has SIZE = 
+    !       NDOF-by-NVAR-by-NNEW-1 .
+    ! FNEW  grid-cell moments on new grid. FNEW has SIZE = 
+    !       NDOF-by-NVAR-by-NNEW-1 .
+    ! BCLO  boundary condition at lower endpoint .
+    ! BCHI  boundary condition at upper endpoint . 
+    ! WORK  method work-space. See RCON-WORK for details .
+    ! OPTS  method parameters. See RCON-OPTS for details .
+    ! TCPU  method tcpu-timer.
+    !
+
+        implicit none
+
+    !------------------------------------------- arguments !
+        integer         , intent(in)    :: npos,nnew
+        integer         , intent(in)    :: nvar,ndof
+        class(rmap_work), intent(inout) :: work
+        class(rmap_opts), intent(inout) :: opts
+        real(kind=dp)   , intent(in)    :: xpos(:)
+        real(kind=dp)   , intent(in)    :: xnew(:)
+        real(kind=dp)   , intent(in)    :: fdat(:,:,:)
+        real(kind=dp)   , intent(out)   :: fnew(:,:,:)
+        type (rcon_ends), intent(in)    :: bclo(:)
+        type (rcon_ends), intent(in)    :: bcup(:)
+        type (rmap_tics), &
+        &   intent(inout) , optional    :: tCPU
+
+        real(kind=dp), parameter    :: RTOL = +1.d-14
 
     !------------------------------------------- variables !
-        integer :: ipos
-        real*8  :: diff,spac,same,xtol
-        real*8  :: delx(1)
-        logical :: uniform
+        integer                         :: ipos
+        real(kind=dp)                   :: diff,spac
+        real(kind=dp)                   :: same,xtol
+        real(kind=dp)                   :: delx(1)
+        logical                         :: uniform
         
 #       ifdef __PPR_TIMER__
-        integer(kind=8) :: ttic,ttoc,rate
+        integer(kind=8)                 :: ttic,ttoc,rate
 #       endif
 
         if (ndof.lt.1) return
@@ -218,29 +283,28 @@
         implicit none    
     
     !------------------------------------------- arguments !
-        integer, intent( in) :: npos,nnew
-        integer, intent( in) :: nvar
-        integer, intent( in) :: ndof,mdof
-        real*8 , intent( in) :: xpos(:)
-        real*8 , intent( in) :: xnew(:)
-        real*8 , intent( in) :: fhat(:,:,:)
-        real*8 , intent( in) :: fdat(:,:,:)        
-        real*8 , intent(out) :: fnew(:,:,:)
-        real*8 , intent( in) :: XTOL
+        integer      , intent( in)  :: npos,nnew
+        integer      , intent( in)  :: nvar
+        integer      , intent( in)  :: ndof,mdof
+        real(kind=dp), intent( in)  :: xpos(:)
+        real(kind=dp), intent( in)  :: xnew(:)
+        real(kind=dp), intent( in)  :: fhat(:,:,:)
+        real(kind=dp), intent( in)  :: fdat(:,:,:)        
+        real(kind=dp), intent(out)  :: fnew(:,:,:)
+        real(kind=dp), intent( in)  :: XTOL
         
     !------------------------------------------- variables !
-        integer :: kpos,ipos,ivar,idof
-        integer :: pos0,pos1,vmin,vmax
-        real*8  :: xmid,xhat,khat,stmp
-        real*8  :: xxlo,xxhi,sslo,sshi,intf
-        real*8  :: vvlo(  +1:+5)
-        real*8  :: vvhi(  +1:+5)        
-        real*8  :: ivec(  +1:+5)
-        real*8  :: sdat(  +1:nvar)
-        real*8  :: snew(  +1:nvar)
-        real*8  :: serr(  +1:nvar)
-        integer :: kmin(  +1:nvar)
-        integer :: kmax(  +1:nvar)
+        integer                     :: kpos,ipos,ivar,idof
+        integer                     :: pos0,pos1,vmin,vmax
+        integer                     :: kmin(+1:nvar)
+        integer                     :: kmax(+1:nvar)        
+        real(kind=dp)               :: xmid,xhat,khat
+        real(kind=dp)               :: xxlo,xxhi,sslo,sshi
+        real(kind=dp)               :: intf
+        real(kind=dp)               :: vvlo(+1:+5)
+        real(kind=dp)               :: vvhi(+1:+5)        
+        real(kind=dp)               :: ivec(+1:+5)
+        real(kind=dp)               :: sdat,snew,serr,stmp
         
         integer, parameter :: INTB = -1   ! integral basis  
 
@@ -322,8 +386,8 @@
                 do  ivar = +1, nvar
     
                 intf =  dot_product (  &
-            &       ivec(+1:mdof),  &
-            &   fhat(+1:mdof,ivar,ipos-0) )
+            &       ivec(1:mdof), & 
+            &   fhat(1:mdof,ivar,ipos - 0))
 
                 intf =  intf * xhat
         
@@ -365,7 +429,9 @@
 
         end do
 
-    !--------- defect corrections: Kahan/Babuska/Neumaier. !
+    !--------- defect corrections: approx. FP conservation !
+
+        do  ivar = +1, nvar-0
 
     !   Carefully compute column sums, leading to a defect
     !   wrt. column-wise conservation. Use KBN approach to
@@ -373,102 +439,92 @@
 
         sdat = 0.d0; serr = 0.d0
         do  ipos = +1, npos-1
-        do  ivar = +1, nvar-0
         
     !------------------------------- integrate old profile !
 
             xhat = xpos(ipos+1) &
         &        - xpos(ipos+0)
 
-            intf = xhat*fdat(1,ivar,ipos)
+            intf = xhat * fdat(+1,ivar,ipos)
             
-            stmp = sdat(ivar) + intf
+            stmp = sdat + intf
 
-            if (abs(sdat(ivar)) &
-        &           .ge. abs(intf)) then
+            if (abs(sdat).ge.abs(intf)) then
 
-            serr(ivar) = &
-        &   serr(ivar) + ((sdat(ivar)-stmp)+intf)
+            serr = &
+        &   serr + ((sdat-stmp)+intf)
 
             else
 
-            serr(ivar) = &
-        &   serr(ivar) + ((intf-stmp)+sdat(ivar))
+            serr = &
+        &   serr + ((intf-stmp)+sdat)
 
             end if
 
-            sdat(ivar) = stmp
+            sdat = stmp
         
         end do
-        end do
-
+        
         sdat =  sdat + serr
 
         snew = 0.d0; serr = 0.d0
         do  ipos = +1, nnew-1
-        do  ivar = +1, nvar-0
         
     !------------------------------- integrate new profile !
 
             khat = xnew(ipos+1) &
         &        - xnew(ipos+0)
 
-            intf = khat*fnew(1,ivar,ipos)
+            intf = khat * fnew(+1,ivar,ipos)
             
-            stmp = snew(ivar) + intf
+            stmp = snew + intf
 
-            if (abs(snew(ivar)) &
-        &           .ge. abs(intf)) then
+            if (abs(snew).ge.abs(intf)) then
 
-            serr(ivar) = &
-        &   serr(ivar) + ((snew(ivar)-stmp)+intf)
+            serr = &
+        &   serr + ((snew-stmp)+intf)
 
             else
 
-            serr(ivar) = &
-        &   serr(ivar) + ((intf-stmp)+snew(ivar))
+            serr = &
+        &   serr + ((intf-stmp)+snew)
 
             end if
 
-            snew(ivar) = stmp
+            snew = stmp
         
         end do
-        end do
-
+        
         snew =  snew + serr
-        serr =  sdat - snew
-
-    !--------- defect corrections: nudge away from extrema !
 
     !   Add a correction to remapped state to impose exact
     !   conservation. Via sign(correction), nudge min/max.
     !   cell means, such that monotonicity is not violated 
     !   near extrema...
     
-        do  ivar = +1, nvar-0
+        serr =  sdat - snew
 
-            if (serr(ivar) .gt. 0.d0) then
+        if (serr .gt. 0.d0) then
 
-                vmin = kmin(ivar)
+            vmin = kmin(ivar)
 
-                fnew(1,ivar,vmin) = &
-        &       fnew(1,ivar,vmin) + &
-        &  serr(ivar)/(xnew(vmin+1)-xnew(vmin+0))
+            fnew(1,ivar,vmin) = &
+        &   fnew(1,ivar,vmin) + &
+        &   serr/(xnew(vmin+1)-xnew(vmin+0))
 
-            else &
-        &   if (serr(ivar) .lt. 0.d0) then
+        else
 
-                vmax = kmax(ivar)
+            vmax = kmax(ivar)
 
-                fnew(1,ivar,vmax) = &
-        &       fnew(1,ivar,vmax) + &
-        &  serr(ivar)/(xnew(vmax+1)-xnew(vmax+0))
+            fnew(1,ivar,vmax) = &
+        &   fnew(1,ivar,vmax) + &
+        &   serr/(xnew(vmax+1)-xnew(vmax+0))
 
-            end if
+        end if
+
+    !------------------------------- new profile now final !
 
         end do
-       
-    !------------------------------- new profile now final !
 
         return
     

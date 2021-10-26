@@ -30,8 +30,8 @@
     ! INV.f90: block-wise solution of small linear systems.
     !
     ! Darren Engwirda 
-    ! 25-Mar-2019
-    ! de2363 [at] columbia [dot] edu
+    ! 25-Jun-2020
+    ! d [dot] engwirda [at] gmail [dot] com
     !
     !
 
@@ -41,16 +41,16 @@
         implicit none
 
     !------------------------------------------- arguments !
-        integer, intent( in) :: adim
-        real*8 , intent( in) :: amat(adim,*)
-        integer, intent( in) :: vdim
-        real*8 , intent(out) :: ainv(vdim,*)
-        real*8 , intent(out) :: adet
+        integer      , intent( in) :: adim
+        real(kind=dp), intent( in) :: amat(adim,*)
+        integer      , intent( in) :: vdim
+        real(kind=dp), intent(out) :: ainv(vdim,*)
+        real(kind=dp), intent(out) :: adet
         
     !------------------------------------------- form A^-1 !
 
         adet   = amat(1,1) * amat(2,2) &
-               - amat(1,2) * amat(2,1)
+        &      - amat(1,2) * amat(2,1)
 
         ainv(1,1) =          amat(2,2)
         ainv(1,2) =        - amat(1,2)
@@ -67,14 +67,14 @@
         implicit none
 
     !------------------------------------------- arguments !
-        integer, intent( in) :: adim
-        real*8 , intent( in) :: amat(adim,*)
-        integer, intent( in) :: vdim
-        real*8 , intent(out) :: ainv(vdim,*)
-        real*8 , intent(out) :: adet
+        integer      , intent( in) :: adim
+        real(kind=dp), intent( in) :: amat(adim,*)
+        integer      , intent( in) :: vdim
+        real(kind=dp), intent(out) :: ainv(vdim,*)
+        real(kind=dp), intent(out) :: adet
         
     !------------------------------------------- variables !
-        real*8 :: &
+        real(kind=dp) :: &
         aa2233,aa2332,aa2133,aa2331,aa2132,&
         aa2231,aa1233,aa1332,aa1223,aa1322,&
         aa1133,aa1331,aa1123,aa1321,aa1132,&
@@ -90,9 +90,9 @@
         aa2231 = amat(2,2) * amat(3,1)
 
         adet =  &
-        amat(1,1) *  (aa2233 - aa2332) - &
-	    amat(1,2) *  (aa2133 - aa2331) + &
-	    amat(1,3) *  (aa2132 - aa2231)
+      & amat(1,1) *  (aa2233 - aa2332) - &
+      & amat(1,2) *  (aa2133 - aa2331) + &
+	  & amat(1,3) *  (aa2132 - aa2231)
 
         aa1233 = amat(1,2) * amat(3,3)
         aa1332 = amat(1,3) * amat(3,2)
@@ -129,54 +129,19 @@
         implicit none
 
     !------------------------------------------- arguments !
-        integer, intent(in)    :: adim
-        real*8 , intent(in)    :: amat(adim,*)
-        integer, intent(in)    :: bdim
-        real*8 , intent(in)    :: bmat(bdim,*)
-        real*8 , intent(in)    :: scal
-        integer, intent(in)    :: cdim
-        real*8 , intent(inout) :: cmat(cdim,*)
+        integer      , intent(in)    :: adim
+        real(kind=dp), intent(in)    :: amat(adim,*)
+        integer      , intent(in)    :: bdim
+        real(kind=dp), intent(in)    :: bmat(bdim,*)
+        real(kind=dp), intent(in)    :: scal
+        integer      , intent(in)    :: cdim
+        real(kind=dp), intent(inout) :: cmat(cdim,*)
 
     !-------------------------------- C = C + scal * A * B !
 
-        if (scal .eq. +1.d0) then
-
-        cmat(1,1) = cmat(1,1) & 
-             + ( amat(1,1) * bmat(1,1) &
-               + amat(1,2) * bmat(2,1) )
-        cmat(2,1) = cmat(2,1) & 
-             + ( amat(2,1) * bmat(1,1) &
-               + amat(2,2) * bmat(2,1) )
-
-        cmat(1,2) = cmat(1,2) & 
-             + ( amat(1,1) * bmat(1,2) &
-               + amat(1,2) * bmat(2,2) )
-        cmat(2,2) = cmat(2,2) & 
-             + ( amat(2,1) * bmat(1,2) &
-               + amat(2,2) * bmat(2,2) )
-
-        else &
-        if (scal .eq. -1.d0) then
-
-        cmat(1,1) = cmat(1,1) & 
-             - ( amat(1,1) * bmat(1,1) &
-               + amat(1,2) * bmat(2,1) )
-        cmat(2,1) = cmat(2,1) & 
-             - ( amat(2,1) * bmat(1,1) &
-               + amat(2,2) * bmat(2,1) )
-
-        cmat(1,2) = cmat(1,2) & 
-             - ( amat(1,1) * bmat(1,2) &
-               + amat(1,2) * bmat(2,2) )
-        cmat(2,2) = cmat(2,2) & 
-             - ( amat(2,1) * bmat(1,2) &
-               + amat(2,2) * bmat(2,2) )
-
-        else 
-
         cmat(1,1) = cmat(1,1) + & 
         scal * ( amat(1,1) * bmat(1,1) &
-               + amat(1,2) * bmat(2,1) )
+               + amat(1,2) * bmat(2,1) ) 
         cmat(2,1) = cmat(2,1) + & 
         scal * ( amat(2,1) * bmat(1,1) &
                + amat(2,2) * bmat(2,1) )
@@ -188,8 +153,6 @@
         scal * ( amat(2,1) * bmat(1,2) &
                + amat(2,2) * bmat(2,2) )
 
-        end if
-
         return
 
     end  subroutine
@@ -200,100 +163,15 @@
         implicit none
 
     !------------------------------------------- arguments !
-        integer, intent(in)    :: adim
-        real*8 , intent(in)    :: amat(adim,*)
-        integer, intent(in)    :: bdim
-        real*8 , intent(in)    :: bmat(bdim,*)
-        real*8 , intent(in)    :: scal
-        integer, intent(in)    :: cdim
-        real*8 , intent(inout) :: cmat(cdim,*)
+        integer      , intent(in)    :: adim
+        real(kind=dp), intent(in)    :: amat(adim,*)
+        integer      , intent(in)    :: bdim
+        real(kind=dp), intent(in)    :: bmat(bdim,*)
+        real(kind=dp), intent(in)    :: scal
+        integer      , intent(in)    :: cdim
+        real(kind=dp), intent(inout) :: cmat(cdim,*)
 
     !-------------------------------- C = C + scal * A * B !
-
-        if (scal .eq. +1.d0) then
-
-        cmat(1,1) = cmat(1,1) &
-             + ( amat(1,1) * bmat(1,1) &
-               + amat(1,2) * bmat(2,1) &
-               + amat(1,3) * bmat(3,1) )
-        cmat(2,1) = cmat(2,1) &
-             + ( amat(2,1) * bmat(1,1) &
-               + amat(2,2) * bmat(2,1) &
-               + amat(2,3) * bmat(3,1) )
-        cmat(3,1) = cmat(3,1) &
-             + ( amat(3,1) * bmat(1,1) &
-               + amat(3,2) * bmat(2,1) &
-               + amat(3,3) * bmat(3,1) )
-
-        cmat(1,2) = cmat(1,2) &
-             + ( amat(1,1) * bmat(1,2) &
-               + amat(1,2) * bmat(2,2) &
-               + amat(1,3) * bmat(3,2) )
-        cmat(2,2) = cmat(2,2) &
-             + ( amat(2,1) * bmat(1,2) &
-               + amat(2,2) * bmat(2,2) &
-               + amat(2,3) * bmat(3,2) )
-        cmat(3,2) = cmat(3,2) &
-             + ( amat(3,1) * bmat(1,2) &
-               + amat(3,2) * bmat(2,2) &
-               + amat(3,3) * bmat(3,2) )
-
-        cmat(1,3) = cmat(1,3) &
-             + ( amat(1,1) * bmat(1,3) &
-               + amat(1,2) * bmat(2,3) &
-               + amat(1,3) * bmat(3,3) )
-        cmat(2,3) = cmat(2,3) &
-             + ( amat(2,1) * bmat(1,3) &
-               + amat(2,2) * bmat(2,3) &
-               + amat(2,3) * bmat(3,3) )
-        cmat(3,3) = cmat(3,3) &
-             + ( amat(3,1) * bmat(1,3) &
-               + amat(3,2) * bmat(2,3) &
-               + amat(3,3) * bmat(3,3) )
-
-        else &
-        if (scal .eq. -1.d0) then
-
-        cmat(1,1) = cmat(1,1) &
-             - ( amat(1,1) * bmat(1,1) &
-               + amat(1,2) * bmat(2,1) &
-               + amat(1,3) * bmat(3,1) )
-        cmat(2,1) = cmat(2,1) &
-             - ( amat(2,1) * bmat(1,1) &
-               + amat(2,2) * bmat(2,1) &
-               + amat(2,3) * bmat(3,1) )
-        cmat(3,1) = cmat(3,1) &
-             - ( amat(3,1) * bmat(1,1) &
-               + amat(3,2) * bmat(2,1) &
-               + amat(3,3) * bmat(3,1) )
-
-        cmat(1,2) = cmat(1,2) &
-             - ( amat(1,1) * bmat(1,2) &
-               + amat(1,2) * bmat(2,2) &
-               + amat(1,3) * bmat(3,2) )
-        cmat(2,2) = cmat(2,2) &
-             - ( amat(2,1) * bmat(1,2) &
-               + amat(2,2) * bmat(2,2) &
-               + amat(2,3) * bmat(3,2) )
-        cmat(3,2) = cmat(3,2) &
-             - ( amat(3,1) * bmat(1,2) &
-               + amat(3,2) * bmat(2,2) &
-               + amat(3,3) * bmat(3,2) )
-
-        cmat(1,3) = cmat(1,3) &
-             - ( amat(1,1) * bmat(1,3) &
-               + amat(1,2) * bmat(2,3) &
-               + amat(1,3) * bmat(3,3) )
-        cmat(2,3) = cmat(2,3) &
-             - ( amat(2,1) * bmat(1,3) &
-               + amat(2,2) * bmat(2,3) &
-               + amat(2,3) * bmat(3,3) )
-        cmat(3,3) = cmat(3,3) &
-             - ( amat(3,1) * bmat(1,3) &
-               + amat(3,2) * bmat(2,3) &
-               + amat(3,3) * bmat(3,3) )
-
-        else 
 
         cmat(1,1) = cmat(1,1) + & 
         scal * ( amat(1,1) * bmat(1,1) &
@@ -334,8 +212,6 @@
                + amat(3,2) * bmat(2,3) &
                + amat(3,3) * bmat(3,3) )
 
-        end if
-
         return
 
     end  subroutine
@@ -346,21 +222,21 @@
         implicit none
 
     !------------------------------------------- arguments !
-        integer, intent(in)    :: adim
-        real*8 , intent(in)    :: amat(adim,*)
-        integer, intent(in)    :: vdim
-        real*8 , intent(inout) :: vrhs(vdim,*)
-        integer, intent(in)    :: nrhs
-        real*8 , intent(in)    :: fEPS
-        logical, intent(inout) :: okay
+        integer      , intent(in)    :: adim
+        real(kind=dp), intent(in)    :: amat(adim,*)
+        integer      , intent(in)    :: vdim
+        real(kind=dp), intent(inout) :: vrhs(vdim,*)
+        integer      , intent(in)    :: nrhs
+        real(kind=dp), intent(in)    :: fEPS
+        logical      , intent(inout) :: okay
 
     !------------------------------------------- variables !
-        real*8                 :: ainv(2,2)
-        real*8                 :: adet
-        real*8                 :: vtmp(  2)
-        integer                :: irhs
+        real(kind=dp)                :: ainv(2,2)
+        real(kind=dp)                :: adet
+        real(kind=dp)                :: vtmp(  2)
+        integer                      :: irhs
 
-        integer, parameter     :: LDIM = 2
+        integer, parameter           :: LDIM = 2
 
     !---------------------------------------- calc. inv(A) !
 
@@ -402,21 +278,21 @@
         implicit none
 
     !------------------------------------------- arguments !
-        integer, intent(in)    :: adim
-        real*8 , intent(in)    :: amat(adim,*)
-        integer, intent(in)    :: vdim
-        real*8 , intent(inout) :: vrhs(vdim,*)
-        integer, intent(in)    :: nrhs
-        real*8 , intent(in)    :: fEPS
-        logical, intent(inout) :: okay
+        integer      , intent(in)    :: adim
+        real(kind=dp), intent(in)    :: amat(adim,*)
+        integer      , intent(in)    :: vdim
+        real(kind=dp), intent(inout) :: vrhs(vdim,*)
+        integer      , intent(in)    :: nrhs
+        real(kind=dp), intent(in)    :: fEPS
+        logical      , intent(inout) :: okay
 
     !------------------------------------------- variables !
-        real*8                 :: ainv(3,3)
-        real*8                 :: adet
-        real*8                 :: vtmp(  3)
-        integer                :: irhs
+        real(kind=dp)                :: ainv(3,3)
+        real(kind=dp)                :: adet
+        real(kind=dp)                :: vtmp(  3)
+        integer                      :: irhs
 
-        integer, parameter     :: LDIM = 3
+        integer, parameter           :: LDIM = 3
 
     !---------------------------------------- calc. inv(A) !
 
@@ -468,25 +344,25 @@
         implicit none
 
     !------------------------------------------- arguments !
-        integer, intent(in)    :: adim
-        real*8 , intent(in)    :: amat(adim,*)
-        integer, intent(in)    :: vdim
-        real*8 , intent(inout) :: vrhs(vdim,*)
-        integer, intent(in)    :: nrhs
-        real*8 , intent(in)    :: fEPS
-        logical, intent(inout) :: okay
+        integer      , intent(in)    :: adim
+        real(kind=dp), intent(in)    :: amat(adim,*)
+        integer      , intent(in)    :: vdim
+        real(kind=dp), intent(inout) :: vrhs(vdim,*)
+        integer      , intent(in)    :: nrhs
+        real(kind=dp), intent(in)    :: fEPS
+        logical      , intent(inout) :: okay
 
     !------------------------------------------- variables !
-        real*8                 :: ainv(2,2)
-        real*8                 :: lmat(2,2)
-        real*8                 :: umat(2,2)
-        real*8                 :: smat(2,2)
-        real*8                 :: sinv(2,2)
-        real*8                 :: adet,sdet        
-        real*8                 :: vtmp(  2)
-        integer                :: irhs
+        real(kind=dp)                :: ainv(2,2)
+        real(kind=dp)                :: lmat(2,2)
+        real(kind=dp)                :: umat(2,2)
+        real(kind=dp)                :: smat(2,2)
+        real(kind=dp)                :: sinv(2,2)
+        real(kind=dp)                :: adet,sdet        
+        real(kind=dp)                :: vtmp(  2)
+        integer                      :: irhs
 
-        integer, parameter     :: LDIM = 2
+        integer, parameter           :: LDIM = 2
 
     !---------------------- form a block LDU factorisation !
 
@@ -499,31 +375,22 @@
 
     !---------------------------------------- L = C * A^-1 !
 
-        lmat(1,1) = +0.d0
-        lmat(1,2) = +0.d0
-        lmat(2,1) = +0.d0
-        lmat(2,2) = +0.d0
+        lmat      = +0.d0
 
         call mul_2x2(amat(3,1),adim,ainv,LDIM, &
                     +1.d0,lmat,LDIM)
         
     !---------------------------------------- U = A^-1 * B !       
 
-        umat(1,1) = +0.d0
-        umat(1,2) = +0.d0
-        umat(2,1) = +0.d0
-        umat(2,2) = +0.d0
+        umat      = +0.d0
  
         call mul_2x2(ainv,LDIM,amat(1,3),adim, &
                     +1.d0,umat,LDIM)
         
     !-------------------------------- S = D - C * A^-1 * B !
 
-        smat(1,1) = amat(3,3)
-        smat(1,2) = amat(3,4)
-        smat(2,1) = amat(4,3)
-        smat(2,2) = amat(4,4)
-
+        smat      = amat(3:4,3:4)
+        
         call mul_2x2(lmat,LDIM,amat(1,3),adim, &
                     -1.d0/adet,smat,LDIM)
 
@@ -609,25 +476,25 @@
         implicit none
 
     !------------------------------------------- arguments !
-        integer, intent(in)    :: adim
-        real*8 , intent(in)    :: amat(adim,*)
-        integer, intent(in)    :: vdim
-        real*8 , intent(inout) :: vrhs(vdim,*)
-        integer, intent(in)    :: nrhs
-        real*8 , intent(in)    :: fEPS
-        logical, intent(inout) :: okay
+        integer      , intent(in)    :: adim
+        real(kind=dp), intent(in)    :: amat(adim,*)
+        integer      , intent(in)    :: vdim
+        real(kind=dp), intent(inout) :: vrhs(vdim,*)
+        integer      , intent(in)    :: nrhs
+        real(kind=dp), intent(in)    :: fEPS
+        logical      , intent(inout) :: okay
 
     !------------------------------------------- variables !
-        real*8                 :: ainv(3,3)
-        real*8                 :: lmat(3,3)
-        real*8                 :: umat(3,3)
-        real*8                 :: smat(3,3)
-        real*8                 :: sinv(3,3)
-        real*8                 :: adet,sdet        
-        real*8                 :: vtmp(  3)
-        integer                :: irhs
+        real(kind=dp)                :: ainv(3,3)
+        real(kind=dp)                :: lmat(3,3)
+        real(kind=dp)                :: umat(3,3)
+        real(kind=dp)                :: smat(3,3)
+        real(kind=dp)                :: sinv(3,3)
+        real(kind=dp)                :: adet,sdet        
+        real(kind=dp)                :: vtmp(  3)
+        integer                      :: irhs
 
-        integer, parameter     :: LDIM = 3
+        integer, parameter           :: LDIM = 3
 
     !---------------------- form a block LDU factorisation !
 
@@ -640,52 +507,28 @@
 
     !---------------------------------------- L = C * A^-1 !
 
-        lmat(1,1) = +0.d0
-        lmat(1,2) = +0.d0
-        lmat(1,3) = +0.d0
-        lmat(2,1) = +0.d0
-        lmat(2,2) = +0.d0
-        lmat(2,3) = +0.d0
-        lmat(3,1) = +0.d0
-        lmat(3,2) = +0.d0
-        lmat(3,3) = +0.d0
+        lmat      = +0.d0
 
         call mul_3x3(amat(4,1),adim,ainv,LDIM, &
                     +1.d0,lmat,LDIM)
         
     !---------------------------------------- U = A^-1 * B !       
 
-        umat(1,1) = +0.d0
-        umat(1,2) = +0.d0
-        umat(1,3) = +0.d0
-        umat(2,1) = +0.d0
-        umat(2,2) = +0.d0
-        umat(2,3) = +0.d0
-        umat(3,1) = +0.d0
-        umat(3,2) = +0.d0
-        umat(3,3) = +0.d0
+        umat      = +0.d0
  
         call mul_3x3(ainv,LDIM,amat(1,4),adim, &
                     +1.d0,umat,LDIM)
         
     !-------------------------------- S = D - C * A^-1 * B !
 
-        smat(1,1) = amat(4,4)
-        smat(1,2) = amat(4,5)
-        smat(1,3) = amat(4,6)
-        smat(2,1) = amat(5,4)
-        smat(2,2) = amat(5,5)
-        smat(2,3) = amat(5,6)
-        smat(3,1) = amat(6,4)
-        smat(3,2) = amat(6,5)
-        smat(3,3) = amat(6,6)
-
+        smat      = amat(4:6,4:6)
+        
         call mul_3x3(lmat,LDIM,amat(1,4),adim, &
                     -1.d0/adet,smat,LDIM)
 
         call inv_3x3(smat,LDIM,sinv,LDIM,sdet)
 
-        okay = (abs(adet) .gt. fEPS)
+        okay = (abs(sdet) .gt. fEPS)
         
         if (okay.eqv..false.) return
 

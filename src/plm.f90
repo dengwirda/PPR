@@ -31,7 +31,7 @@
     !
     ! Darren Engwirda 
     ! 08-Sep-2016
-    ! de2363 [at] columbia [dot] edu
+    ! d [dot] engwirda [at] gmail [dot] com
     !
     !
 
@@ -55,12 +55,12 @@
         implicit none
 
     !------------------------------------------- arguments !
-        integer, intent( in) :: npos,nvar
-        integer, intent( in) :: ndof,ilim
-        real*8 , intent( in) :: dmin
-        real*8 , intent( in) :: delx(:)
-        real*8 , intent(out) :: fhat(:,:,:)
-        real*8 , intent( in) :: fdat(:,:,:)
+        integer      , intent( in) :: npos,nvar
+        integer      , intent( in) :: ndof,ilim
+        real(kind=dp), intent( in) :: dmin
+        real(kind=dp), intent( in) :: delx(:)
+        real(kind=dp), intent(out) :: fhat(:,:,:)
+        real(kind=dp), intent( in) :: fdat(:,:,:)
 
         if (size(delx).gt.+1) then
         
@@ -108,16 +108,17 @@
         implicit none
 
     !------------------------------------------- arguments !
-        integer, intent( in) :: npos,nvar
-        integer, intent( in) :: ndof,ilim
-        real*8 , intent( in) :: dmin
-        real*8 , intent( in) :: delx(:)
-        real*8 , intent(out) :: fhat(:,:,:)
-        real*8 , intent( in) :: fdat(:,:,:)
+        integer      , intent( in) :: npos,nvar
+        integer      , intent( in) :: ndof,ilim
+        real(kind=dp), intent( in) :: dmin
+        real(kind=dp), intent( in) :: delx(:)
+        real(kind=dp), intent(out) :: fhat(:,:,:)
+        real(kind=dp), intent( in) :: fdat(:,:,:)
         
     !------------------------------------------- variables !
-        integer :: ipos,ivar,head,tail
-        real*8  :: dfds(-1:+1)
+        integer                    :: ipos,ivar
+        integer                    :: head,tail
+        real(kind=dp)              :: dfds(-1:+1)
 
         head = +1; tail = npos - 1
 
@@ -216,16 +217,17 @@
         implicit none
 
     !------------------------------------------- arguments !
-        integer, intent( in) :: npos,nvar
-        integer, intent( in) :: ndof,ilim
-        real*8 , intent( in) :: dmin
-        real*8 , intent( in) :: delx(1)
-        real*8 , intent(out) :: fhat(:,:,:)
-        real*8 , intent( in) :: fdat(:,:,:)
+        integer      , intent( in) :: npos,nvar
+        integer      , intent( in) :: ndof,ilim
+        real(kind=dp), intent( in) :: dmin
+        real(kind=dp), intent( in) :: delx(1)
+        real(kind=dp), intent(out) :: fhat(:,:,:)
+        real(kind=dp), intent( in) :: fdat(:,:,:)
         
     !------------------------------------------- variables !
-        integer :: ipos,ivar,head,tail
-        real*8  :: dfds(-1:+1)
+        integer                    :: ipos,ivar
+        integer                    :: head,tail
+        real(kind=dp)              :: dfds(-1:+1)
 
         head = +1; tail = npos - 1
 
@@ -317,14 +319,14 @@
         implicit none
 
     !------------------------------------------- arguments !
-        real*8 , intent( in) :: ffll,ff00,ffrr
-        real*8 , intent( in) :: hhll,hh00,hhrr
-        real*8 , intent(out) :: dfds(-1:+1)
+        real(kind=dp), intent( in) :: ffll,ff00,ffrr
+        real(kind=dp), intent( in) :: hhll,hh00,hhrr
+        real(kind=dp), intent(out) :: dfds(-1:+1)
 
     !------------------------------------------- variables !
-        real*8  :: fell,ferr,scal
+        real(kind=dp)  :: fell,ferr,scal
 
-        real*8 , parameter :: ZERO = 1.d-14
+        real(kind=dp), parameter :: ZERO = 1.d-14
 
     !---------------------------- 2nd-order approximations !
 
@@ -394,13 +396,13 @@
         implicit none
 
     !------------------------------------------- arguments !
-        real*8 , intent( in) :: ffll,ff00,ffrr
-        real*8 , intent(out) :: dfds(-1:+1)
+        real(kind=dp), intent( in) :: ffll,ff00,ffrr
+        real(kind=dp), intent(out) :: dfds(-1:+1)
 
     !------------------------------------------- variables !
-        real*8  :: fell,ferr,scal
+        real(kind=dp)  :: fell,ferr,scal
 
-        real*8 , parameter :: ZERO = 1.d-14
+        real(kind=dp), parameter :: ZERO = 1.d-14
 
     !---------------------------- 2nd-order approximations !
 

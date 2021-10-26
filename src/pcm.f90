@@ -31,7 +31,7 @@
     !
     ! Darren Engwirda 
     ! 08-Sep-2016
-    ! de2363 [at] columbia [dot] edu
+    ! d [dot] engwirda [at] gmail [dot] com
     !
     !
 
@@ -51,12 +51,12 @@
         implicit none
 
     !------------------------------------------- arguments !
-        integer, intent( in) :: npos,nvar,ndof
-        real*8 , intent(out) :: fhat(:,:,:)
-        real*8 , intent( in) :: fdat(:,:,:)
+        integer      , intent(in)   :: npos,nvar,ndof
+        real(kind=dp), intent(out)  :: fhat(:,:,:)
+        real(kind=dp), intent(in)   :: fdat(:,:,:)
 
     !------------------------------------------- variables !
-        integer:: ipos,ivar,idof
+        integer     :: ipos,ivar,idof
 
         do  ipos = +1, npos - 1
         do  ivar = +1, nvar + 0

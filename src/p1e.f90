@@ -31,7 +31,7 @@
     !
     ! Darren Engwirda 
     ! 09-Sep-2016
-    ! de2363 [at] columbia [dot] edu
+    ! d [dot] engwirda [at] gmail [dot] com
     !
     !
 
@@ -60,20 +60,21 @@
         implicit none
 
     !------------------------------------------- arguments !
-        integer, intent( in) :: npos,nvar,ndof
-        real*8 , intent( in) :: delx(:)
-        real*8 , intent( in) :: fdat(:,:,:)
-        type (rcon_ends), intent(in) :: bclo(:)
-        type (rcon_ends), intent(in) :: bchi(:)
-        real*8 , intent(out) :: edge(:,:)
-        real*8 , intent(out) :: dfdx(:,:)
-        real*8 , intent( in) :: dmin
-        class(rcon_opts), intent(in) :: opts
+        integer         , intent(in)    :: npos,nvar,ndof
+        real(kind=dp)   , intent(in)    :: delx(:)
+        real(kind=dp)   , intent(in)    :: fdat(:,:,:)
+        type (rcon_ends), intent(in)    :: bclo(:)
+        type (rcon_ends), intent(in)    :: bchi(:)
+        real(kind=dp)   , intent(out)   :: edge(:,:)
+        real(kind=dp)   , intent(out)   :: dfdx(:,:)
+        real(kind=dp)   , intent(in)    :: dmin
+        class(rcon_opts), intent(in)    :: opts
 
     !------------------------------------------- variables !
-        integer :: ipos,ivar,head,tail
-        real*8  :: dd10
-        real*8  :: delh(-1:+0)
+        integer                         :: ipos,ivar
+        integer                         :: head,tail
+        real(kind=dp)                   :: dd10
+        real(kind=dp)                   :: delh(-1:+0)
 
         head = +2; tail = npos-1
 
@@ -114,9 +115,9 @@
         &       fdat(1,ivar,ipos+0)
 
                 dfdx(ivar,ipos) = &
-        &         - 2.0d+0 *  &
+        &         - 2.00d+00 * &
         &       fdat(1,ivar,ipos-1) &
-        &         + 2.0d+0 *  &
+        &         + 2.00d+00 * &
         &       fdat(1,ivar,ipos+0)
 
                 edge(ivar,ipos) = &
@@ -150,9 +151,9 @@
         &       fdat(1,ivar,ipos+0)
 
                 dfdx(ivar,ipos) = &
-        &         - 2.0d+0 *  &
+        &         - 2.00d+00 * &
         &       fdat(1,ivar,ipos-1) &
-        &         + 2.0d+0 *  &
+        &         + 2.00d+00 * &
         &       fdat(1,ivar,ipos+0)
 
                 edge(ivar,ipos) = &

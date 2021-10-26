@@ -31,7 +31,7 @@
     !
     ! Darren Engwirda 
     ! 08-Sep-2016
-    ! de2363 [at] columbia [dot] edu
+    ! d [dot] engwirda [at] gmail [dot] com
     !
     !
     
@@ -53,14 +53,14 @@
         implicit none
 
     !------------------------------------------- arguments !
-        integer, intent( in) :: npos,nvar,ndof
-        real*8 , intent( in) :: dmin
-        real*8 , intent( in) :: delx(:)
-        real*8 , intent( in) :: fdat(:,:,:)
-        real*8 , intent(out) :: oscl(:,:,:)
+        integer      , intent(in)   :: npos,nvar,ndof
+        real(kind=dp), intent(in)   :: dmin
+        real(kind=dp), intent(in)   :: delx(:)
+        real(kind=dp), intent(in)   :: fdat(:,:,:)
+        real(kind=dp), intent(out)  :: oscl(:,:,:)
 
     !------------------------------------------- variables !
-        integer :: ivar,ipos
+        integer     :: ivar,ipos
         
         if (npos.lt.3) then
     !------------------------------- at least 3 grid-cells !
@@ -116,22 +116,22 @@
         implicit none
 
     !------------------------------------------- arguments !
-        integer, intent( in) :: npos,nvar,ndof
-        real*8 , intent( in) :: dmin
-        real*8 , intent( in) :: delx(:)
-        real*8 , intent( in) :: fdat(:,:,:)
-        real*8 , intent(out) :: oscl(:,:,:)
+        integer      , intent(in)   :: npos,nvar,ndof
+        real(kind=dp), intent(in)   :: dmin
+        real(kind=dp), intent(in)   :: delx(:)
+        real(kind=dp), intent(in)   :: fdat(:,:,:)
+        real(kind=dp), intent(out)  :: oscl(:,:,:)
 
     !------------------------------------------- variables !
-        integer :: head,tail
-        integer :: ipos,ivar
-        real*8  :: hhll,hhcc,hhrr
-        real*8  :: hhmm,hhrc,hhlc
-        real*8  :: cmat(2,3)
-
-        head = +1 ; tail = npos-1
+        integer                     :: head,tail
+        integer                     :: ipos,ivar
+        real(kind=dp)               :: hhll,hhcc,hhrr
+        real(kind=dp)               :: hhmm,hhrc,hhlc
+        real(kind=dp)               :: cmat(+2,+3)
 
     !--------------------------------------- centred point !
+
+        head = +1 ; tail = npos-1
 
         do  ipos = head+1, tail-1
 
@@ -232,18 +232,18 @@
         implicit none
 
     !------------------------------------------- arguments !
-        integer, intent( in) :: npos,nvar,ndof
-        real*8 , intent( in) :: dmin
-        real*8 , intent( in) :: delx(1)
-        real*8 , intent( in) :: fdat(:,:,:)
-        real*8 , intent(out) :: oscl(:,:,:)
+        integer      , intent( in) :: npos,nvar,ndof
+        real(kind=dp), intent( in) :: dmin
+        real(kind=dp), intent( in) :: delx(1)
+        real(kind=dp), intent( in) :: fdat(:,:,:)
+        real(kind=dp), intent(out) :: oscl(:,:,:)
 
     !------------------------------------------- variables !
-        integer :: head,tail,ipos,ivar
+        integer     :: head,tail,ipos,ivar
         
-        head = +1; tail = npos - 1
-
     !-------------------------------------- centred points !
+
+        head = +1; tail = npos - 1
 
         do  ipos = 2, npos-2
         do  ivar = 1, nvar-0

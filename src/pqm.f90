@@ -31,7 +31,7 @@
     !
     ! Darren Engwirda 
     ! 08-Sep-2016
-    ! de2363 [at] columbia [dot] edu
+    ! d [dot] engwirda [at] gmail [dot] com
     !
     !
 
@@ -71,27 +71,27 @@
         implicit none
         
     !------------------------------------------- arguments !
-        integer, intent(in)  :: npos,nvar,ndof
-        integer, intent(in)  :: ilim,wlim,halo
-        real*8 , intent(in)  :: dmin
-        real*8 , intent(out) :: fhat(:,:,:)
-        real*8 , intent(in)  :: oscl(:,:,:)
-        real*8 , intent(in)  :: delx(:)
-        real*8 , intent(in)  :: fdat(:,:,:)
-        real*8 , intent(in)  :: edge(:,:)
-        real*8 , intent(in)  :: dfdx(:,:)
+        integer      , intent(in)  :: npos,nvar,ndof
+        integer      , intent(in)  :: ilim,wlim,halo
+        real(kind=dp), intent(in)  :: dmin
+        real(kind=dp), intent(out) :: fhat(:,:,:)
+        real(kind=dp), intent(in)  :: oscl(:,:,:)
+        real(kind=dp), intent(in)  :: delx(:)
+        real(kind=dp), intent(in)  :: fdat(:,:,:)
+        real(kind=dp), intent(in)  :: edge(:,:)
+        real(kind=dp), intent(in)  :: dfdx(:,:)
 
     !------------------------------------------- variables !
-        integer :: ipos,ivar,iill,iirr,head,tail
-        real*8  :: ff00,ffll,ffrr,hh00,hhll,hhrr
-        real*8  :: xhat
-        integer :: mono
-        real*8  :: fell,ferr
-        real*8  :: dell,derr
-        real*8  :: dfds(-1:+1)
-        real*8  :: uhat(+1:+5)
-        real*8  :: lhat(+1:+5)
-        real*8  :: wval(+1:+2)
+        integer       :: ipos,ivar,iill,iirr,head,tail
+        real(kind=dp) :: ff00,ffll,ffrr,hh00,hhll,hhrr
+        real(kind=dp) :: xhat
+        integer       :: mono
+        real(kind=dp) :: fell,ferr
+        real(kind=dp) :: dell,derr
+        real(kind=dp) :: dfds(-1:+1)
+        real(kind=dp) :: uhat(+1:+5)
+        real(kind=dp) :: lhat(+1:+5)
+        real(kind=dp) :: wval(+1:+2)
         
         head = +1; tail = npos - 1
 
@@ -266,19 +266,20 @@
         implicit none
 
     !------------------------------------------- arguments !
-        real*8 , intent(in)    :: ff00
-        real*8 , intent(in)    :: ffll,ffrr
-        real*8 , intent(inout) :: fell,ferr
-        real*8 , intent(inout) :: dell,derr
-        real*8 , intent(in)    :: dfds(-1:+1)
-        real*8 , intent(out)   :: uhat(+1:+5)
-        real*8 , intent(out)   :: lhat(+1:+5)
-        integer, intent(out)   :: mono
+        real(kind=dp), intent(in)    :: ff00
+        real(kind=dp), intent(in)    :: ffll,ffrr
+        real(kind=dp), intent(inout) :: fell,ferr
+        real(kind=dp), intent(inout) :: dell,derr
+        real(kind=dp), intent(in)    :: dfds(-1:+1)
+        real(kind=dp), intent(out)   :: uhat(+1:+5)
+        real(kind=dp), intent(out)   :: lhat(+1:+5)
+        integer      , intent(out)   :: mono
           
     !------------------------------------------- variables !
-        integer :: turn
-        real*8  :: grad, iflx(+1:+2)
-        logical :: haveroot
+        integer         :: turn
+        real(kind=dp)   :: grad
+        real(kind=dp)   :: iflx(+1:+2)
+        logical         :: haveroot
         
     !-------------------------------- "null" slope-limiter !
         
@@ -330,15 +331,7 @@
             mono = +1
        
             fell = ff00 - dfds(0)
-
-        end if
-
-        if (dell * dfds(0) .lt. 0.d+0) then
-
-            mono = +1
-
-            dell = dfds(0)
- 
+            
         end if
 
         if((ffrr - ferr) * &
@@ -347,15 +340,7 @@
             mono = +1
 
             ferr = ff00 + dfds(0)
-         
-        end if
-
-        if (derr * dfds(0) .lt. 0.d+0) then
-
-            mono = +1
-
-            derr = dfds(0)
-
+            
         end if
     
     !----------------------------------- limit cell values !
@@ -461,9 +446,9 @@
     &- ( 1.d+0 /  3.d+0) * ferr &
     &- ( 4.d+0 /  3.d+0) * fell
 
-        if (dell*dfds(+0) .lt. 0.d+0) then
+        if (dell*dfds(-0) .lt. 0.d+0) then
 
-        dell =   0.d+0
+        dell = dfds(-0)
 
         ferr = &
     &+ ( 5.d+0 /  1.d+0) * ff00 &
@@ -475,7 +460,7 @@
         else &
     &   if (derr*dfds(+0) .lt. 0.d+0) then
 
-        derr =   0.d+0
+        derr = dfds(+0)
 
         fell = &
     &+ ( 5.d+0 /  2.d+0) * ff00 &
@@ -522,9 +507,9 @@
     &- ( 2.d+0 /  1.d+0) * ferr &
     &- ( 3.d+0 /  1.d+0) * fell
 
-        if (dell*dfds(+0) .lt. 0.d+0) then
+        if (dell*dfds(-0) .lt. 0.d+0) then
 
-        dell =   0.d+0
+        dell = dfds(-0)
 
         ferr = &
     &+ ( 5.d+0 /  2.d+0) * ff00 &
@@ -536,7 +521,7 @@
         else & 
     &   if (derr*dfds(+0) .lt. 0.d+0) then
 
-        derr =   0.d+0
+        derr = dfds(+0)
 
         fell = &
     &+ ( 5.d+0 /  1.d+0) * ff00 &

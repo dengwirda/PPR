@@ -31,7 +31,7 @@
     !
     ! Darren Engwirda 
     ! 25-Mar-2019
-    ! de2363 [at] columbia [dot] edu
+    ! d [dot] engwirda [at] gmail [dot] com
     !
     !
 
@@ -60,28 +60,29 @@
         implicit none
 
     !------------------------------------------- arguments !
-        integer, intent( in) :: npos,nvar,ndof
-        real*8 , intent( in) :: delx(:)
-        real*8 , intent( in) :: fdat(:,:,:)
-        type (rcon_ends), intent(in) :: bclo(:)
-        type (rcon_ends), intent(in) :: bchi(:)
-        real*8 , intent(out) :: edge(:,:)
-        real*8 , intent(out) :: dfdx(:,:)
-        real*8 , intent( in) :: dmin
-        class(rcon_opts), intent(in) :: opts
+        integer         , intent(in)    :: npos,nvar,ndof
+        real(kind=dp)   , intent(in)    :: delx(:)
+        real(kind=dp)   , intent(in)    :: fdat(:,:,:)
+        type (rcon_ends), intent(in)    :: bclo(:)
+        type (rcon_ends), intent(in)    :: bchi(:)
+        real(kind=dp)   , intent(out)   :: edge(:,:)
+        real(kind=dp)   , intent(out)   :: dfdx(:,:)
+        real(kind=dp)   , intent(in)    :: dmin
+        class(rcon_opts), intent(in)    :: opts
 
     !------------------------------------------- variables !
-        integer :: ipos,ivar,idof,head,tail
-        logical :: okay        
-        real*8  :: xhat,fEPS
-        real*8  :: delh(-3:+2)
-        real*8  :: xmap(-3:+3)
-        real*8  :: fhat(+6, nvar)
-        real*8  :: ivec(+6,-3:+3)
-        real*8  :: cmat(+6,+6)
+        integer                         :: ipos,ivar,idof
+        integer                         :: head,tail
+        logical                         :: okay        
+        real(kind=dp)                   :: xhat,fEPS
+        real(kind=dp)                   :: delh(-3:+2)
+        real(kind=dp)                   :: xmap(-3:+3)
+        real(kind=dp)                   :: fhat(+6, nvar)
+        real(kind=dp)                   :: ivec(+6,-3:+3)
+        real(kind=dp)                   :: cmat(+6,+6)
         
-        integer, parameter :: NSIZ = +6
-        real*8 , parameter :: ZERO = 1.d-14   
+        integer      , parameter :: NSIZ = +6
+        real(kind=dp), parameter :: ZERO = +1.d-14   
 
         head = +4 ; tail = npos - 3
 
@@ -120,31 +121,31 @@
             do  ivar = 1, nvar
 
                 edge(ivar,ipos) = &
-        &     + ( 1.d0 / 60.d0) * & 
+        &     + ( 1.d+0 / 60.d+0) * & 
         &       fdat(1,ivar,ipos-3) &
-        &     - ( 8.d0 / 60.d0) * &
+        &     - ( 8.d+0 / 60.d+0) * &
         &       fdat(1,ivar,ipos-2) &
-        &     + (37.d0 / 60.d0) * &
+        &     + (37.d+0 / 60.d+0) * &
         &       fdat(1,ivar,ipos-1) &
-        &     + (37.d0 / 60.d0) * &
+        &     + (37.d+0 / 60.d+0) * &
         &       fdat(1,ivar,ipos+0) &
-        &     - ( 8.d0 / 60.d0) * &
+        &     - ( 8.d+0 / 60.d+0) * &
         &       fdat(1,ivar,ipos+1) &
-        &     + ( 1.d0 / 60.d0) * &
+        &     + ( 1.d+0 / 60.d+0) * &
         &       fdat(1,ivar,ipos+2)
             
                 dfdx(ivar,ipos) = &
-        &     - ( 1.d0 / 90.d0) * & 
+        &     - ( 1.d+0 / 90.d+0) * & 
         &       fdat(1,ivar,ipos-3) &
-        &     + ( 5.d0 / 36.d0) * &
+        &     + ( 5.d+0 / 36.d+0) * &
         &       fdat(1,ivar,ipos-2) &
-        &     - (49.d0 / 36.d0) * &
+        &     - (49.d+0 / 36.d+0) * &
         &       fdat(1,ivar,ipos-1) &
-        &     + (49.d0 / 36.d0) * &
+        &     + (49.d+0 / 36.d+0) * &
         &       fdat(1,ivar,ipos+0) &
-        &     - ( 5.d0 / 36.d0) * &
+        &     - ( 5.d+0 / 36.d+0) * &
         &       fdat(1,ivar,ipos+1) &
-        &     + ( 1.d0 / 90.d0) * &
+        &     + ( 1.d+0 / 90.d+0) * &
         &       fdat(1,ivar,ipos+2)
 
                 dfdx(ivar,ipos) = &
@@ -276,7 +277,7 @@
 
     !------------------------- fallback if system singular !
 
-#           ifdef __PPR_WARNMAT__
+#           ifdef __PPR_PIVOT__
             
             write(*,*) &
     &   "WARNING::P5E - matrix-is-singular!"
