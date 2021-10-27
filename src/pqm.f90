@@ -30,7 +30,7 @@
     ! PQM.f90: a 1d slope-limited, piecewise quartic recon.
     !
     ! Darren Engwirda 
-    ! 08-Sep-2016
+    ! 25-Oct-2021
     ! d [dot] engwirda [at] gmail [dot] com
     !
     !
@@ -43,8 +43,7 @@
 
     pure subroutine pqm(npos,nvar,ndof,delx, &
         &               fdat,fhat,edge,dfdx, &
-        &               oscl,dmin,ilim,wlim, &
-        &               halo)
+        &               oscl,ilim,wlim,halo)
 
     !
     ! NPOS  no. edges over grid.
@@ -62,7 +61,6 @@
     !       is an array with SIZE = NVAR-by-NPOS .
     ! OSCL  grid-cell oscil. dof.'s. OSCL is an array with
     !       SIZE = +2  -by-NVAR-by-NPOS-1 .
-    ! DMIN  min. grid-cell spacing thresh . 
     ! ILIM  cell slope-limiting selection .
     ! WLIM  wall slope-limiting selection .
     ! HALO  width of re-con. stencil, symmetric about mid. .
@@ -73,7 +71,6 @@
     !------------------------------------------- arguments !
         integer      , intent(in)  :: npos,nvar,ndof
         integer      , intent(in)  :: ilim,wlim,halo
-        real(kind=dp), intent(in)  :: dmin
         real(kind=dp), intent(out) :: fhat(:,:,:)
         real(kind=dp), intent(in)  :: oscl(:,:,:)
         real(kind=dp), intent(in)  :: delx(:)
@@ -92,7 +89,7 @@
         real(kind=dp) :: uhat(+1:+5)
         real(kind=dp) :: lhat(+1:+5)
         real(kind=dp) :: wval(+1:+2)
-        
+    
         head = +1; tail = npos - 1
 
         if (npos.le.2) then
@@ -106,6 +103,7 @@
         end do
         end if
 
+        if (ndof.le.0) return
         if (npos.le.2) return
 
     !------------------- reconstruct function on each cell !
@@ -136,15 +134,15 @@
 
             xhat = delx(ipos+0)*.5d+0
 
-            call plsv (ffll,hhll,ff00, &
-    &                  hh00,ffrr,hhrr, &
-    &                  dfds)
+            call plsv (dfds,mono_limit, &
+    &                  ffll,hhll,ff00 , &
+    &                  hh00,ffrr,hhrr)
             else
             
             xhat = delx(    +1)*.5d+0
             
-            call plsc (ffll,ff00,ffrr, &
-    &                  dfds)
+            call plsc (dfds,mono_limit, &
+    &                  ffll,ff00,ffrr)
 
             end if              
 
@@ -329,20 +327,32 @@
     &      (fell - ff00) .le. 0.d+0) then
 
             mono = +1
-       
             fell = ff00 - dfds(0)
             
+        end if
+
+        if (dell * dfds(-1) .lt. 0.d+0) then
+
+            mono = +1
+            dell = dfds(-1)
+
         end if
 
         if((ffrr - ferr) * &
     &      (ferr - ff00) .le. 0.d+0) then
 
             mono = +1
-
             ferr = ff00 + dfds(0)
             
         end if
     
+        if (derr * dfds(+1) .lt. 0.d+0) then
+
+            mono = +1
+            derr = dfds(+1)
+
+        end if
+
     !----------------------------------- limit cell values !
     
         lhat(1) = &
@@ -435,60 +445,60 @@
 
     !------------------ pop inflection points onto -1 edge !
 
-        mono = +2
+            mono = +2
 
-        derr = &
-    &- ( 5.d+0 /  1.d+0) * ff00 &
-    &+ ( 3.d+0 /  1.d+0) * ferr &
-    &+ ( 2.d+0 /  1.d+0) * fell
-        dell = &
-    &+ ( 5.d+0 /  3.d+0) * ff00 &
-    &- ( 1.d+0 /  3.d+0) * ferr &
-    &- ( 4.d+0 /  3.d+0) * fell
+            derr = &
+    &    - ( 5.d+0 /  1.d+0) * ff00 &
+    &    + ( 3.d+0 /  1.d+0) * ferr &
+    &    + ( 2.d+0 /  1.d+0) * fell
+            dell = &
+    &    + ( 5.d+0 /  3.d+0) * ff00 &
+    &    - ( 1.d+0 /  3.d+0) * ferr &
+    &    - ( 4.d+0 /  3.d+0) * fell
 
-        if (dell*dfds(-0) .lt. 0.d+0) then
+            if (dell*dfds(-0) .lt. 0.d+0) then
 
-        dell = dfds(-0)
+            dell = dfds(-0)
 
-        ferr = &
-    &+ ( 5.d+0 /  1.d+0) * ff00 &
-    &- ( 4.d+0 /  1.d+0) * fell
-        derr = &
-    &+ (10.d+0 /  1.d+0) * ff00 &
-    &- (10.d+0 /  1.d+0) * fell
+            ferr = &
+    &    + ( 5.d+0 /  1.d+0) * ff00 &
+    &    - ( 4.d+0 /  1.d+0) * fell
+            derr = &
+    &    + (10.d+0 /  1.d+0) * ff00 &
+    &    - (10.d+0 /  1.d+0) * fell
 
-        else &
-    &   if (derr*dfds(+0) .lt. 0.d+0) then
+            else &
+    &       if (derr*dfds(+0) .lt. 0.d+0) then
 
-        derr = dfds(+0)
+            derr = dfds(+0)
 
-        fell = &
-    &+ ( 5.d+0 /  2.d+0) * ff00 &
-    &- ( 3.d+0 /  2.d+0) * ferr
-        dell = &
-    &- ( 5.d+0 /  3.d+0) * ff00 &
-    &+ ( 5.d+0 /  3.d+0) * ferr
+            fell = &
+    &    + ( 5.d+0 /  2.d+0) * ff00 &
+    &    - ( 3.d+0 /  2.d+0) * ferr
+            dell = &
+    &    - ( 5.d+0 /  3.d+0) * ff00 &
+    &    + ( 5.d+0 /  3.d+0) * ferr
 
-        end if
+            end if
 
-        lhat(1) = &
-    &+ (30.d+0 / 16.d+0) * ff00 &
-    &- ( 7.d+0 / 16.d+0) *(ferr+fell) &
-    &+ ( 1.d+0 / 16.d+0) *(derr-dell)
-        lhat(2) = &
-    &+ ( 3.d+0 /  4.d+0) *(ferr-fell) &
-    &- ( 1.d+0 /  4.d+0) *(derr+dell)
-        lhat(3) = &
-    &- (30.d+0 /  8.d+0) * ff00 &
-    &+ (15.d+0 /  8.d+0) *(ferr+fell) &
-    &- ( 3.d+0 /  8.d+0) *(derr-dell)
-        lhat(4) = &
-    &- ( 1.d+0 /  4.d+0) *(ferr-fell  &
-    &                     -derr-dell)
-        lhat(5) = &
-    &+ (30.d+0 / 16.d+0) * ff00 &
-    &- (15.d+0 / 16.d+0) *(ferr+fell) &
-    &+ ( 5.d+0 / 16.d+0) *(derr-dell)
+            lhat(1) = &
+    &    + (30.d+0 / 16.d+0) * ff00 &
+    &    - ( 7.d+0 / 16.d+0) *(ferr+fell) &
+    &    + ( 1.d+0 / 16.d+0) *(derr-dell)
+            lhat(2) = &
+    &    + ( 3.d+0 /  4.d+0) *(ferr-fell) &
+    &    - ( 1.d+0 /  4.d+0) *(derr+dell)
+            lhat(3) = &
+    &    - (30.d+0 /  8.d+0) * ff00 &
+    &    + (15.d+0 /  8.d+0) *(ferr+fell) &
+    &    - ( 3.d+0 /  8.d+0) *(derr-dell)
+            lhat(4) = &
+    &    - ( 1.d+0 /  4.d+0) *(ferr-fell  &
+    &                         -derr-dell)
+            lhat(5) = &
+    &    + (30.d+0 / 16.d+0) * ff00 &
+    &    - (15.d+0 / 16.d+0) *(ferr+fell) &
+    &    + ( 5.d+0 / 16.d+0) *(derr-dell)
 
         end if
 
@@ -496,60 +506,60 @@
 
     !------------------ pop inflection points onto -1 edge !
     
-        mono = +2
+            mono = +2
 
-        derr = &
-    &- ( 5.d+0 /  3.d+0) * ff00 &
-    &+ ( 4.d+0 /  3.d+0) * ferr &
-    &+ ( 1.d+0 /  3.d+0) * fell
-        dell = &
-    &+ ( 5.d+0 /  1.d+0) * ff00 &
-    &- ( 2.d+0 /  1.d+0) * ferr &
-    &- ( 3.d+0 /  1.d+0) * fell
+            derr = &
+    &    - ( 5.d+0 /  3.d+0) * ff00 &
+    &    + ( 4.d+0 /  3.d+0) * ferr &
+    &    + ( 1.d+0 /  3.d+0) * fell
+            dell = &
+    &    + ( 5.d+0 /  1.d+0) * ff00 &
+    &    - ( 2.d+0 /  1.d+0) * ferr &
+    &    - ( 3.d+0 /  1.d+0) * fell
 
-        if (dell*dfds(-0) .lt. 0.d+0) then
+            if (dell*dfds(-0) .lt. 0.d+0) then
 
-        dell = dfds(-0)
+            dell = dfds(-0)
 
-        ferr = &
-    &+ ( 5.d+0 /  2.d+0) * ff00 &
-    &- ( 3.d+0 /  2.d+0) * fell
-        derr = &
-    &+ ( 5.d+0 /  3.d+0) * ff00 &
-    &- ( 5.d+0 /  3.d+0) * fell
+            ferr = &
+    &    + ( 5.d+0 /  2.d+0) * ff00 &
+    &    - ( 3.d+0 /  2.d+0) * fell
+            derr = &
+    &    + ( 5.d+0 /  3.d+0) * ff00 &
+    &    - ( 5.d+0 /  3.d+0) * fell
 
-        else & 
-    &   if (derr*dfds(+0) .lt. 0.d+0) then
+            else & 
+    &       if (derr*dfds(+0) .lt. 0.d+0) then
 
-        derr = dfds(+0)
+            derr = dfds(+0)
 
-        fell = &
-    &+ ( 5.d+0 /  1.d+0) * ff00 &
-    &- ( 4.d+0 /  1.d+0) * ferr
-        dell = &
-    &- (10.d+0 /  1.d+0) * ff00 &
-    &+ (10.d+0 /  1.d+0) * ferr
+            fell = &
+    &    + ( 5.d+0 /  1.d+0) * ff00 &
+    &    - ( 4.d+0 /  1.d+0) * ferr
+            dell = &
+    &    - (10.d+0 /  1.d+0) * ff00 &
+    &    + (10.d+0 /  1.d+0) * ferr
 
-        end if
+            end if
 
-        lhat(1) = &
-    &+ (30.d+0 / 16.d+0) * ff00 &
-    &- ( 7.d+0 / 16.d+0) *(ferr+fell) &
-    &+ ( 1.d+0 / 16.d+0) *(derr-dell)
-        lhat(2) = &
-    &+ ( 3.d+0 /  4.d+0) *(ferr-fell) &
-    &- ( 1.d+0 /  4.d+0) *(derr+dell)
-        lhat(3) = &
-    &- (30.d+0 /  8.d+0) * ff00 &
-    &+ (15.d+0 /  8.d+0) *(ferr+fell) &
-    &- ( 3.d+0 /  8.d+0) *(derr-dell)
-        lhat(4) = &
-    &- ( 1.d+0 /  4.d+0) *(ferr-fell  &
-    &                     -derr-dell)
-        lhat(5) = &
-    &+ (30.d+0 / 16.d+0) * ff00 &
-    &- (15.d+0 / 16.d+0) *(ferr+fell) &
-    &+ ( 5.d+0 / 16.d+0) *(derr-dell)
+            lhat(1) = &
+    &    + (30.d+0 / 16.d+0) * ff00 &
+    &    - ( 7.d+0 / 16.d+0) *(ferr+fell) &
+    &    + ( 1.d+0 / 16.d+0) *(derr-dell)
+            lhat(2) = &
+    &    + ( 3.d+0 /  4.d+0) *(ferr-fell) &
+    &    - ( 1.d+0 /  4.d+0) *(derr+dell)
+            lhat(3) = &
+    &    - (30.d+0 /  8.d+0) * ff00 &
+    &    + (15.d+0 /  8.d+0) *(ferr+fell) &
+    &    - ( 3.d+0 /  8.d+0) *(derr-dell)
+            lhat(4) = &
+    &    - ( 1.d+0 /  4.d+0) *(ferr-fell  &
+    &                         -derr-dell)
+            lhat(5) = &
+    &    + (30.d+0 / 16.d+0) * ff00 &
+    &    - (15.d+0 / 16.d+0) *(ferr+fell) &
+    &    + ( 5.d+0 / 16.d+0) *(derr-dell)
 
         end if
     

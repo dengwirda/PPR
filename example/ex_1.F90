@@ -1,12 +1,13 @@
 
-!   gfortran -O3 -flto ex_1.F90 -o ex_1
+!   gfortran -pedantic -O3 -flto ex_1.F90 -o ex_1
 !   ./ex_1
 
 !   Same as ex_1.f90, but with a capitalised *.F90 to enable
 !   the preprocessor directives without the -cpp flag. 
 !
 
-#   include "../src/ppr_1d.F90"         ! note: *.F90!
+!   note: *.F90!
+#   include "../src/ppr_1d.F90"
 
     program ex
 
@@ -21,8 +22,8 @@
         integer :: ipos
 
     !------------------------------ position of cell edges !
-        real*8  :: xpos(npos),xtmp(ntmp)
-        real*8  :: xmid
+        real(kind=dp) :: xpos(npos),xtmp(ntmp)
+        real(kind=dp) :: xmid
         
     !-------------------------------- finite-volume arrays !
 
@@ -35,9 +36,9 @@
     !   batch is typically more efficient than one-by-one. 
     !   The last dim. is the no. cells (layers) in the grid.
 
-        real*8  :: init(ndof,nvar,npos-1)
-        real*8  :: ftmp(ndof,nvar,ntmp-1)
-        real*8  :: fdat(ndof,nvar,npos-1)
+        real(kind=dp) :: init(ndof,nvar,npos-1)
+        real(kind=dp) :: fdat(ndof,nvar,npos-1)        
+        real(kind=dp) :: ftmp(ndof,nvar,ntmp-1)
 
     !------------------------------ method data-structures !
         type(rmap_work) :: work

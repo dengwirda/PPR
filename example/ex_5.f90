@@ -1,5 +1,5 @@
 
-!   gfortran -cpp -O3 -flto ex_5.f90 -o ex_5
+!   gfortran -pedantic -cpp -O3 -flto ex_5.f90 -o ex_5
 !   ./ex_5
 
 !   Assemble high-order interpolants over a uniform domain.
@@ -19,8 +19,8 @@
         integer :: ipos,jpos,mdof
 
     !------------------------------- domain discretisation !
-        real*8  :: xpos(npos),xdel(1)
-        real*8  :: xmid,xhat,xloc,floc
+        real(kind=dp) :: xpos(npos),xdel(1)
+        real(kind=dp) :: xmid,xhat,xloc,floc
         
     !-------------------------------- finite-volume arrays !
 
@@ -33,7 +33,7 @@
     !   batch is typically more efficient than one-by-one. 
     !   The last dim. is the no. cells (layers) in the grid.
 
-        real*8  :: fdat(ndof,nvar,npos-1)
+        real(kind=dp) :: fdat(ndof,nvar,npos-1)
         
     !-------------------------------- reconstruction coeff !
 
@@ -45,9 +45,9 @@
     !   vector assembled at the interpolation points. Basis
     !   vectors can eb assembled via calls to BFUN1D(). 
 
-        real*8  :: fhat(   5,nvar,npos-1)
-        real*8  :: bvec(   5)
-        real*8  :: spos(   5)
+        real(kind=dp) :: fhat(   5,nvar,npos-1)
+        real(kind=dp) :: bvec(   5)
+        real(kind=dp) :: spos(   5)
 
     !------------------------------ method data-structures !
         type(rcon_work) :: work
@@ -93,7 +93,7 @@
 
     !------------------------------ build cell polynomials !
 
-        fhat = 0.d+0
+        fhat = 0.d+0; bvec = 0.d+0; spos = 0.d+0
 
         mdof = ndof1d (opts%cell_meth)
 

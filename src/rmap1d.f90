@@ -77,7 +77,7 @@
 
         if (xpos(npos) .ge. xpos(1)) then       ! +ve xdir
 
-        call _map1d(npos,nnew,nvar,ndof, &
+        call xmap1d(npos,nnew,nvar,ndof, &
         &           xpos(+1:npos:+1), &
         &           xnew(+1:nnew:+1), &
         &           fdat(:,:,+1:npos-1:+1), &
@@ -86,7 +86,7 @@
 
         else                                    ! -ve xdir
 
-        call _map1d(npos,nnew,nvar,ndof, &
+        call xmap1d(npos,nnew,nvar,ndof, &
         &           xpos(npos:+1:-1), &
         &           xnew(nnew:+1:-1), &
         &           fdat(:,:,npos-1:+1:-1), &
@@ -99,7 +99,7 @@
 
     end  subroutine
 
-    subroutine _map1d(npos,nnew,nvar,ndof,xpos, &
+    subroutine xmap1d(npos,nnew,nvar,ndof,xpos, &
         &             xnew,fdat,fnew,bclo,bcup, &
         &             work,opts,tCPU)
 
@@ -312,6 +312,8 @@
 
         kmin = +1 ; kmax = +1
         pos0 = +1 ; pos1 = +1
+
+        vvlo = 0.d+0; vvhi = 0.d+0; ivec = 0.d+0
 
         do  kpos = +1, nnew-1
 

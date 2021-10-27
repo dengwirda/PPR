@@ -172,7 +172,6 @@
     !------------------------------------ 2nd-order method !
             call plm(npos,nvar,ndof, &
             &        delx,fdat,fhat, &
-            &        dmin,&
             &        opts%cell_lims)
 
             case(ppm_method)
@@ -181,7 +180,6 @@
             &        delx,fdat,fhat, &
             &        work%edge_func, &
             &        work%cell_oscl, &
-            &        dmin,&
             &        opts%cell_lims, &
             &        opts%wall_lims, &
             &        halo )
@@ -193,7 +191,6 @@
             &        work%edge_func, &
             &        work%edge_dfdx, &
             &        work%cell_oscl, &
-            &        dmin,&
             &        opts%cell_lims, &
             &        opts%wall_lims, &
             &        halo )

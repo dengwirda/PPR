@@ -30,7 +30,7 @@
     ! OSCL1D.f90: "oscillation-indicators" for WENO interp.
     !
     ! Darren Engwirda 
-    ! 08-Sep-2016
+    ! 25-Oct-2021
     ! d [dot] engwirda [at] gmail [dot] com
     !
     !
@@ -80,15 +80,14 @@
 
     !------------------------------- variable grid-spacing !
 
-            call osclv(npos,nvar,ndof,delx, &
-        &              fdat,oscl,dmin)
+            call osclv(npos,nvar,ndof,delx,dmin, &
+        &              fdat,oscl)
         
         else
 
     !------------------------------- constant grid-spacing !
         
-            call osclc(npos,nvar,ndof,delx, &
-        &              fdat,oscl,dmin)
+            call osclc(npos,nvar,ndof,fdat,oscl)
                 
         end if
 
@@ -97,7 +96,7 @@
     end  subroutine
     
     pure subroutine osclv (npos,nvar,ndof,delx,&
-        &                  fdat,oscl,dmin)
+        &                  dmin,fdat,oscl)
 
     !
     ! *this is the variable grid-spacing variant .
@@ -132,6 +131,8 @@
     !--------------------------------------- centred point !
 
         head = +1 ; tail = npos-1
+
+        if (ndof.lt.1) return
 
         do  ipos = head+1, tail-1
 
@@ -212,8 +213,7 @@
 
     end  subroutine
     
-    pure subroutine osclc (npos,nvar,ndof,delx,&
-        &                  fdat,oscl,dmin)
+    pure subroutine osclc (npos,nvar,ndof,fdat,oscl)
 
     !
     ! *this is the constant grid-spacing variant .
@@ -233,8 +233,6 @@
 
     !------------------------------------------- arguments !
         integer      , intent( in) :: npos,nvar,ndof
-        real(kind=dp), intent( in) :: dmin
-        real(kind=dp), intent( in) :: delx(1)
         real(kind=dp), intent( in) :: fdat(:,:,:)
         real(kind=dp), intent(out) :: oscl(:,:,:)
 
@@ -244,6 +242,8 @@
     !-------------------------------------- centred points !
 
         head = +1; tail = npos - 1
+
+        if (ndof.lt.1) return
 
         do  ipos = 2, npos-2
         do  ivar = 1, nvar-0

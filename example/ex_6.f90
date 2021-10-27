@@ -1,5 +1,5 @@
 
-!   gfortran -cpp -O3 -flto ex_6.f90 -o ex_6
+!   gfortran -pedantic -cpp -O3 -flto ex_6.f90 -o ex_6
 !   ./ex_6
 
 !   1d scalar transport in a periodic domain. Fluxes are
@@ -25,8 +25,8 @@
         integer :: ipos,il,ir,step
 
     !------------------------------- domain discretisation !
-        real*8  :: xpos(1-halo:npos+halo)
-        real*8  :: xmid,xdel(1),tDEL
+        real(kind=dp) :: xpos(1-halo:npos+halo)
+        real(kind=dp) :: xmid,xdel(1),tDEL
         
     !-------------------------------- finite-volume arrays !
 
@@ -37,12 +37,12 @@
     !   FLUX: edge-wise distribution of upwind fluxes
     !   QDIV: cell-wise distribution of divergence
 
-        real*8  :: init(ndof,nvar,1-halo:npos+halo-1)
-        real*8  :: qbar(ndof,nvar,1-halo:npos+halo-1)
-        logical :: mask(          1-halo:npos+halo-1)
-        real*8  :: uvel(          1-halo:npos+halo)        
-        real*8  :: flux(     nvar,1-halo:npos+halo)        
-        real*8  :: qdiv(     nvar,1-halo:npos+halo-1)
+        real(kind=dp) :: init(ndof,nvar,1-halo:npos+halo-1)
+        real(kind=dp) :: qbar(ndof,nvar,1-halo:npos+halo-1)
+        logical       :: mask(          1-halo:npos+halo-1)
+        real(kind=dp) :: uvel(          1-halo:npos+halo)        
+        real(kind=dp) :: flux(     nvar,1-halo:npos+halo)        
+        real(kind=dp) :: qdiv(     nvar,1-halo:npos+halo-1)
         
 
     !------------------------------ method data-structures !

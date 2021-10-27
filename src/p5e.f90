@@ -94,6 +94,7 @@
         &             opts,dmin)
         end if
 
+        if (ndof.le.0) return
         if (npos.le.6) return
 
     !------ impose value/slope B.C.'s about lower endpoint !

@@ -32,15 +32,15 @@
     ! PPR-1D.f90: 1-d piecewise polynomial reconstructions.
     !
     ! Darren Engwirda 
-    ! 25-Jun-2020
+    ! 25-Oct-2021
     ! d [dot] engwirda [at] gmail [dot] com
     !
     !
 
     implicit none
 
-    integer, parameter      :: sp = kind(+1.e+00)
-    integer, parameter      :: dp = kind(+1.d+00)
+    integer, parameter      :: sp = kind(+1.0e+00)
+    integer, parameter      :: dp = kind(+1.0d+00)
 
     !------------------------------------ compile-time def !
 
@@ -54,13 +54,14 @@
 
 #       define __TOC__(time, mark)          \
         call system_clock   (ttoc,rate) ;   \
-        if ( present(time)) \
+        if ( present(time) ) \
         time%mark=time%mark+(ttoc-ttic)
     
 #   else
 
 #       define __TIC__
-#       define __TOC__(time, mark)
+#       define __TOC__(time, mark)          \
+        if ( present(time) ) time%mark = + 0
 
 #   endif
 
@@ -153,7 +154,9 @@
         class(rcon_opts) , optional      :: opts
 
     !------------------------------------------- variables !
-        integer :: okay
+        integer :: okay,ndof
+
+        ndof = ndof1d(opts%cell_meth)
 
         allocate(this% &
         &   edge_func(  nvar,npos), &
@@ -273,6 +276,9 @@
             rdof = +3
         else if (meth.eq.pqm_method) then
             rdof = +5
+
+        else
+            rdof = +0               ! default
         
         end if
         

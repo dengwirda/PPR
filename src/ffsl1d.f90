@@ -248,6 +248,8 @@
 
     !----------- single-cell, lagrangian-type upwind rcon. !
         
+        vv11 = 0.d+0; vv22 = 0.d+0; ivec = 0.d+0
+
         do  ipos = +2 , npos - 1
         
             if (uvel(ipos) .gt. +0.d0) then

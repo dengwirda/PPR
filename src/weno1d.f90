@@ -351,7 +351,7 @@
       
     !---------------------------------------- "lower" part !
       
-        delh = 0.d0
+        delh = 0.d0 * delx(1)
 
         do  hpos = ipos-1, imin, -1
         
@@ -380,7 +380,7 @@
       
     !---------------------------------------- "upper" part !     
       
-        delh = 0.d0
+        delh = 0.d0 * delx(1)
         
         do  hpos = ipos+1, imax, +1
         

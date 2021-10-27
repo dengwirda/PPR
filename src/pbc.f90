@@ -215,6 +215,8 @@
 
         head = +2; tail = npos - 2
 
+        if (ndof.le.0) return
+
         if (size(delx).gt.+1) then
 
     !------------------ mean grid spacing about ii-th cell !
@@ -545,6 +547,8 @@
         real(kind=dp), parameter :: ZERO = +1.d-14
 
         head = +2; tail = npos - 2
+
+        if (ndof.le.0) return
 
         if (size(delx).gt.+1) then
 

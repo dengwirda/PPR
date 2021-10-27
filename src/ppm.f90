@@ -42,8 +42,8 @@
     !
 
     pure subroutine ppm(npos,nvar,ndof,delx, &
-        &               fdat,fhat,edge,oscl, &
-        &               dmin,ilim,wlim,halo)
+        &               fdat,fhat,edge, &
+        &               oscl,ilim,wlim,halo)
 
     !
     ! NPOS  no. edges over grid.
@@ -59,7 +59,6 @@
     !       is an array with SIZE = NVAR-by-NPOS .
     ! OSCL  grid-cell oscil. dof.'s. OSCL is an array with
     !       SIZE = +2  -by-NVAR-by-NPOS-1 .
-    ! DMIN  min. grid-cell spacing thresh . 
     ! ILIM  cell slope-limiting selection .
     ! WLIM  wall slope-limiting selection .
     ! HALO  width of re-con. stencil, symmetric about mid. .
@@ -69,7 +68,6 @@
 
     !------------------------------------------- arguments !
         integer      , intent(in)  :: npos,nvar,ndof
-        real(kind=dp), intent(in)  :: dmin
         real(kind=dp), intent(out) :: fhat(:,:,:)
         real(kind=dp), intent(in)  :: oscl(:,:,:)
         real(kind=dp), intent(in)  :: delx(:)
@@ -99,6 +97,7 @@
         end do
         end if
 
+        if (ndof.le.0) return
         if (npos.le.2) return
 
     !------------------- reconstruct function on each cell !
@@ -130,13 +129,13 @@
             hhll = delx(iill)
             hhrr = delx(iirr)
 
-            call plsv (ffll,hhll,ff00, &
-    &                  hh00,ffrr,hhrr, &
-    &                  dfds)
+            call plsv (dfds,mono_limit, &
+    &                  ffll,hhll,ff00 , &
+    &                  hh00,ffrr,hhrr)
             else
             
-            call plsc (ffll,ff00,ffrr, &
-    &                  dfds)
+            call plsc (dfds,mono_limit, &
+    &                  ffll,ff00,ffrr)
     
             end if
 

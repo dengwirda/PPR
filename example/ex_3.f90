@@ -1,5 +1,5 @@
 
-!   gfortran -cpp -O3 -flto ex_3.f90 -o ex_3
+!   gfortran -pedantic -cpp -O3 -flto ex_3.f90 -o ex_3
 !   ./ex_3
 
 !   "Convergence" testing: remap a smooth (Gaussian) profile 
@@ -25,8 +25,8 @@
         integer :: ipos
 
     !------------------------------ position of cell edges !
-        real*8  :: xpos(npos),xtmp(ntmp)
-        real*8  :: xdel,xmid
+        real(kind=dp) :: xpos(npos),xtmp(ntmp)
+        real(kind=dp) :: xdel,xmid
         
     !-------------------------------- finite-volume arrays !
 
@@ -39,9 +39,9 @@
     !   batch is typically more efficient than one-by-one. 
     !   The last dim. is the no. cells (layers) in the grid.
 
-        real*8  :: init(ndof,nvar,npos-1)
-        real*8  :: ftmp(ndof,nvar,ntmp-1)
-        real*8  :: fdat(ndof,nvar,npos-1)
+        real(kind=dp) :: init(ndof,nvar,npos-1)
+        real(kind=dp) :: fdat(ndof,nvar,npos-1)        
+        real(kind=dp) :: ftmp(ndof,nvar,ntmp-1)
 
     !------------------------------ method data-structures !
         type(rmap_work) :: work
