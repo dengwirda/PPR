@@ -30,13 +30,13 @@
     ! PLM.f90: a 1d, slope-limited piecewise linear method.
     !
     ! Darren Engwirda 
-    ! 08-Sep-2016
-    ! de2363 [at] columbia [dot] edu
+    ! 25-Oct-2021
+    ! d [dot] engwirda [at] gmail [dot] com
     !
     !
 
     pure subroutine plm(npos,nvar,ndof,delx, &
-        &               fdat,fhat,dmin,ilim)
+        &               fdat,fhat,ilim)
 
     !
     ! NPOS  no. edges over grid.
@@ -48,35 +48,30 @@
     !       SIZE = NDOF-by-NVAR-by-NPOS-1 .
     ! FHAT  grid-cell re-con. array. FHAT is an array with
     !       SIZE = MDOF-by-NVAR-by-NPOS-1 .
-    ! DMIN  min. grid-cell spacing thresh .
     ! ILIM  cell slope-limiting selection .
     !
 
         implicit none
 
     !------------------------------------------- arguments !
-        integer, intent( in) :: npos,nvar
-        integer, intent( in) :: ndof,ilim
-        real*8 , intent( in) :: dmin
-        real*8 , intent( in) :: delx(:)
-        real*8 , intent(out) :: fhat(:,:,:)
-        real*8 , intent( in) :: fdat(:,:,:)
+        integer      , intent( in) :: npos,nvar
+        integer      , intent( in) :: ndof,ilim
+        real(kind=dp), intent( in) :: delx(:)
+        real(kind=dp), intent(out) :: fhat(:,:,:)
+        real(kind=dp), intent( in) :: fdat(:,:,:)
 
         if (size(delx).gt.+1) then
         
     !------------------------------- variable grid-spacing !
         
-            call plmv(npos,nvar,ndof,delx,&
-        &             fdat,fhat,&
-        &             dmin,ilim )
+            call plmv(npos,nvar,ndof,fdat,fhat,ilim, &
+        &             delx)
         
         else
         
     !------------------------------- constant grid-spacing !
         
-            call plmc(npos,nvar,ndof,delx,&
-        &             fdat,fhat,&
-        &             dmin,ilim )
+            call plmc(npos,nvar,ndof,fdat,fhat,ilim)
         
         end if
 
@@ -86,8 +81,8 @@
     
     !------------------------- assemble PLM reconstruction !
 
-    pure subroutine plmv(npos,nvar,ndof,delx, &
-        &                fdat,fhat,dmin,ilim)
+    pure subroutine plmv(npos,nvar,ndof,fdat,fhat,ilim, &
+        &                delx)
 
     !
     ! *this is the variable grid-spacing variant .
@@ -101,23 +96,22 @@
     !       SIZE = NDOF-by-NVAR-by-NPOS-1 .
     ! FHAT  grid-cell re-con. array. FHAT is an array with
     !       SIZE = MDOF-by-NVAR-by-NPOS-1 .
-    ! DMIN  min. grid-cell spacing thresh .
     ! ILIM  cell slope-limiting selection .
     !
 
         implicit none
 
     !------------------------------------------- arguments !
-        integer, intent( in) :: npos,nvar
-        integer, intent( in) :: ndof,ilim
-        real*8 , intent( in) :: dmin
-        real*8 , intent( in) :: delx(:)
-        real*8 , intent(out) :: fhat(:,:,:)
-        real*8 , intent( in) :: fdat(:,:,:)
+        integer      , intent( in) :: npos,nvar
+        integer      , intent( in) :: ndof,ilim
+        real(kind=dp), intent( in) :: delx(:)
+        real(kind=dp), intent(out) :: fhat(:,:,:)
+        real(kind=dp), intent( in) :: fdat(:,:,:)
         
     !------------------------------------------- variables !
-        integer :: ipos,ivar,head,tail
-        real*8  :: dfds(-1:+1)
+        integer                    :: ipos,ivar
+        integer                    :: head,tail
+        real(kind=dp)              :: dfds(-1:+1)
 
         head = +1; tail = npos - 1
 
@@ -130,19 +124,20 @@
         end do
         end if
 
+        if (ndof.le.0) return
         if (npos.le.2) return
   
     !-------------------------------------- lower-endpoint !
         
         do  ivar = +1 , nvar-0
 
-            call plsv( &
+            call plsv(dfds,ilim , &
         &   fdat(1,ivar,head+0) , &
         &   delx(head+0), &
         &   fdat(1,ivar,head+0) , &
         &   delx(head+0), &
         &   fdat(1,ivar,head+1) , &
-        &   delx(head+1), dfds)
+        &   delx(head+1))
 
             fhat(1,ivar,head) = &
         &   fdat(1,ivar,head)
@@ -154,13 +149,13 @@
         
         do  ivar = +1 , nvar-0
 
-            call plsv( &
+            call plsv(dfds,ilim , &
         &   fdat(1,ivar,tail-1) , &
         &   delx(tail-1), &
         &   fdat(1,ivar,tail+0) , &
         &   delx(tail+0), &
         &   fdat(1,ivar,tail+0) , &
-        &   delx(tail+0), dfds)
+        &   delx(tail+0))
 
             fhat(1,ivar,tail) = &
         &   fdat(1,ivar,tail)
@@ -173,13 +168,13 @@
         do  ipos = +2 , npos-2
         do  ivar = +1 , nvar-0
 
-            call plsv( &
+            call plsv(dfds,ilim , &
         &   fdat(1,ivar,ipos-1) , &
         &   delx(ipos-1), &
         &   fdat(1,ivar,ipos+0) , &
         &   delx(ipos+0), &
         &   fdat(1,ivar,ipos+1) , &
-        &   delx(ipos+1), dfds)
+        &   delx(ipos+1))
 
             fhat(1,ivar,ipos) = &
         &   fdat(1,ivar,ipos)
@@ -194,8 +189,7 @@
 
     !------------------------- assemble PLM reconstruction !
 
-    pure subroutine plmc(npos,nvar,ndof,delx, &
-        &                fdat,fhat,dmin,ilim)
+    pure subroutine plmc(npos,nvar,ndof,fdat,fhat,ilim)
 
     !
     ! *this is the constant grid-spacing variant .
@@ -209,23 +203,21 @@
     !       SIZE = NDOF-by-NVAR-by-NPOS-1 .
     ! FHAT  grid-cell re-con. array. FHAT is an array with
     !       SIZE = MDOF-by-NVAR-by-NPOS-1 .
-    ! DMIN  min. grid-cell spacing thresh .
     ! ILIM  cell slope-limiting selection .
     !
 
         implicit none
 
     !------------------------------------------- arguments !
-        integer, intent( in) :: npos,nvar
-        integer, intent( in) :: ndof,ilim
-        real*8 , intent( in) :: dmin
-        real*8 , intent( in) :: delx(1)
-        real*8 , intent(out) :: fhat(:,:,:)
-        real*8 , intent( in) :: fdat(:,:,:)
+        integer      , intent( in) :: npos,nvar
+        integer      , intent( in) :: ndof,ilim
+        real(kind=dp), intent(out) :: fhat(:,:,:)
+        real(kind=dp), intent( in) :: fdat(:,:,:)
         
     !------------------------------------------- variables !
-        integer :: ipos,ivar,head,tail
-        real*8  :: dfds(-1:+1)
+        integer                    :: ipos,ivar
+        integer                    :: head,tail
+        real(kind=dp)              :: dfds(-1:+1)
 
         head = +1; tail = npos - 1
 
@@ -238,17 +230,17 @@
         end do
         end if
 
+        if (ndof.le.0) return
         if (npos.le.2) return
   
     !-------------------------------------- lower-endpoint !
         
         do  ivar = +1 , nvar-0
 
-            call plsc( &
+            call plsc(dfds,ilim , &
         &   fdat(1,ivar,head+0) , &
         &   fdat(1,ivar,head+0) , &
-        &   fdat(1,ivar,head+1) , &
-        &        dfds)
+        &   fdat(1,ivar,head+1))
 
             fhat(1,ivar,head) = &
         &   fdat(1,ivar,head)
@@ -260,11 +252,10 @@
         
         do  ivar = +1 , nvar-0
 
-            call plsc( &
+            call plsc(dfds,ilim , &
         &   fdat(1,ivar,tail-1) , &
         &   fdat(1,ivar,tail+0) , &
-        &   fdat(1,ivar,tail+0) , &
-        &        dfds)
+        &   fdat(1,ivar,tail+0))
 
             fhat(1,ivar,tail) = &
         &   fdat(1,ivar,tail)
@@ -277,11 +268,10 @@
         do  ipos = +2 , npos-2
         do  ivar = +1 , nvar-0
 
-            call plsc( &
+            call plsc(dfds,ilim , &
         &   fdat(1,ivar,ipos-1) , &
         &   fdat(1,ivar,ipos+0) , &
-        &   fdat(1,ivar,ipos+1) , &
-        &        dfds)
+        &   fdat(1,ivar,ipos+1))
 
             fhat(1,ivar,ipos) = &
         &   fdat(1,ivar,ipos)
@@ -296,37 +286,61 @@
     
     !------------------------------- assemble PLM "slopes" !
     
-    pure subroutine plsv(ffll,hhll,ff00,hh00,&
-        &                ffrr,hhrr,dfds)
+    pure subroutine plsv(dfds,ilim,ffll,hhll, &
+        &                ff00,hh00,ffrr,hhrr)
 
     !
     ! *this is the variable grid-spacing variant .
     !
+    ! DFDS  piecewise linear gradients in local co-ord.'s.
+    !       DFDS(+0) is a centred, slope-limited estimate,
+    !       DFDS(-1), DFDS(+1) are left- and right-biased
+    !       estimates (un-limited).
     ! FFLL  left -biased grid-cell mean.
     ! HHLL  left -biased grid-cell spac.
     ! FF00  centred grid-cell mean.
     ! HH00  centred grid-cell spac.
     ! FFRR  right-biased grid-cell mean.
     ! HHRR  right-biased grid-cell spac.
-    ! DFDS  piecewise linear gradients in local co-ord.'s.
-    !       DFDS(+0) is a centred, slope-limited estimate,
-    !       DFDS(-1), DFDS(+1) are left- and right-biased
-    !       estimates (unlimited).
     !
 
         implicit none
 
     !------------------------------------------- arguments !
-        real*8 , intent( in) :: ffll,ff00,ffrr
-        real*8 , intent( in) :: hhll,hh00,hhrr
-        real*8 , intent(out) :: dfds(-1:+1)
+        integer      , intent( in) :: ilim
+        real(kind=dp), intent( in) :: ffll,ff00,ffrr
+        real(kind=dp), intent( in) :: hhll,hh00,hhrr
+        real(kind=dp), intent(out) :: dfds(-1:+1)
 
     !------------------------------------------- variables !
-        real*8  :: fell,ferr,scal
+        real(kind=dp)  :: fell,ferr,scal
 
-        real*8 , parameter :: ZERO = 1.d-14
+        real(kind=dp), parameter :: ZERO = 1.d-14
 
     !---------------------------- 2nd-order approximations !
+
+        if (ilim .eq. null_limit) then
+
+    !---------------------------- calc. centred derivative !
+
+            fell = (hh00*ffll+hhll*ff00) & 
+        &        / (hhll+hh00)        
+            ferr = (hhrr*ff00+hh00*ffrr) &
+        &        / (hh00+hhrr)
+
+            dfds(-1) = (ff00 - ffll) &
+        &       / (hhll + hh00) * hh00
+            dfds(+1) = (ffrr - ff00) &
+        &       / (hh00 + hhrr) * hh00
+
+            dfds(+0) = &
+        &       0.5d+0 * (ferr - fell)
+
+            return
+
+        end if
+
+    !---------------------------- calc. limited PLM slopes !
 
         dfds(-1) = ff00-ffll
         dfds(+1) = ffrr-ff00
@@ -377,32 +391,54 @@
     
     !------------------------------- assemble PLM "slopes" !
     
-    pure subroutine plsc(ffll,ff00,ffrr,dfds)
+    pure subroutine plsc(dfds,ilim,ffll,ff00,ffrr)
 
     !
     ! *this is the constant grid-spacing variant .
     !
-    ! FFLL  left -biased grid-cell mean.
-    ! FF00  centred grid-cell mean.
-    ! FFRR  right-biased grid-cell mean.
     ! DFDS  piecewise linear gradients in local co-ord.'s.
     !       DFDS(+0) is a centred, slope-limited estimate,
     !       DFDS(-1), DFDS(+1) are left- and right-biased
-    !       estimates (unlimited).
+    !       estimates (un-limited).
+    ! FFLL  left -biased grid-cell mean.
+    ! FF00  centred grid-cell mean.
+    ! FFRR  right-biased grid-cell mean.
     !
 
         implicit none
 
     !------------------------------------------- arguments !
-        real*8 , intent( in) :: ffll,ff00,ffrr
-        real*8 , intent(out) :: dfds(-1:+1)
+        integer      , intent( in) :: ilim
+        real(kind=dp), intent( in) :: ffll,ff00,ffrr
+        real(kind=dp), intent(out) :: dfds(-1:+1)
 
     !------------------------------------------- variables !
-        real*8  :: fell,ferr,scal
+        real(kind=dp)  :: fell,ferr,scal
 
-        real*8 , parameter :: ZERO = 1.d-14
+        real(kind=dp), parameter :: ZERO = 1.d-14
 
     !---------------------------- 2nd-order approximations !
+
+        if (ilim .eq. null_limit) then
+
+    !---------------------------- calc. centred derivative !
+
+            fell = (ffll+ff00) * .5d+0        
+            ferr = (ff00+ffrr) * .5d+0
+
+            dfds(-1) = &
+        &       0.5d+0 * (ff00 - ffll)
+            dfds(+1) = &
+        &       0.5d+0 * (ffrr - ff00)
+
+            dfds(+0) = &
+        &       0.5d+0 * (ferr - fell)
+
+            return
+
+        end if
+
+    !---------------------------- calc. limited PLM slopes !
 
         dfds(-1) = ff00-ffll
         dfds(+1) = ffrr-ff00

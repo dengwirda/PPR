@@ -30,8 +30,8 @@
     ! PQM.f90: a 1d slope-limited, piecewise quartic recon.
     !
     ! Darren Engwirda 
-    ! 08-Sep-2016
-    ! de2363 [at] columbia [dot] edu
+    ! 06-Nov-2021
+    ! d [dot] engwirda [at] gmail [dot] com
     !
     !
 
@@ -43,8 +43,7 @@
 
     pure subroutine pqm(npos,nvar,ndof,delx, &
         &               fdat,fhat,edge,dfdx, &
-        &               oscl,dmin,ilim,wlim, &
-        &               halo)
+        &               oscl,ilim,wlim,halo)
 
     !
     ! NPOS  no. edges over grid.
@@ -62,7 +61,6 @@
     !       is an array with SIZE = NVAR-by-NPOS .
     ! OSCL  grid-cell oscil. dof.'s. OSCL is an array with
     !       SIZE = +2  -by-NVAR-by-NPOS-1 .
-    ! DMIN  min. grid-cell spacing thresh . 
     ! ILIM  cell slope-limiting selection .
     ! WLIM  wall slope-limiting selection .
     ! HALO  width of re-con. stencil, symmetric about mid. .
@@ -71,28 +69,27 @@
         implicit none
         
     !------------------------------------------- arguments !
-        integer, intent(in)  :: npos,nvar,ndof
-        integer, intent(in)  :: ilim,wlim,halo
-        real*8 , intent(in)  :: dmin
-        real*8 , intent(out) :: fhat(:,:,:)
-        real*8 , intent(in)  :: oscl(:,:,:)
-        real*8 , intent(in)  :: delx(:)
-        real*8 , intent(in)  :: fdat(:,:,:)
-        real*8 , intent(in)  :: edge(:,:)
-        real*8 , intent(in)  :: dfdx(:,:)
+        integer      , intent(in)  :: npos,nvar,ndof
+        integer      , intent(in)  :: ilim,wlim,halo
+        real(kind=dp), intent(out) :: fhat(:,:,:)
+        real(kind=dp), intent(in)  :: oscl(:,:,:)
+        real(kind=dp), intent(in)  :: delx(:)
+        real(kind=dp), intent(in)  :: fdat(:,:,:)
+        real(kind=dp), intent(in)  :: edge(:,:)
+        real(kind=dp), intent(in)  :: dfdx(:,:)
 
     !------------------------------------------- variables !
-        integer :: ipos,ivar,iill,iirr,head,tail
-        real*8  :: ff00,ffll,ffrr,hh00,hhll,hhrr
-        real*8  :: xhat
-        integer :: mono
-        real*8  :: fell,ferr
-        real*8  :: dell,derr
-        real*8  :: dfds(-1:+1)
-        real*8  :: uhat(+1:+5)
-        real*8  :: lhat(+1:+5)
-        real*8  :: wval(+1:+2)
-        
+        integer       :: ipos,ivar,iill,iirr,head,tail
+        real(kind=dp) :: ff00,ffll,ffrr,hh00,hhll,hhrr
+        real(kind=dp) :: xhat
+        integer       :: mono
+        real(kind=dp) :: fell,ferr
+        real(kind=dp) :: dell,derr
+        real(kind=dp) :: dfds(-1:+1)
+        real(kind=dp) :: uhat(+1:+5)
+        real(kind=dp) :: lhat(+1:+5)
+        real(kind=dp) :: wval(+1:+2)
+    
         head = +1; tail = npos - 1
 
         if (npos.le.2) then
@@ -106,6 +103,7 @@
         end do
         end if
 
+        if (ndof.le.0) return
         if (npos.le.2) return
 
     !------------------- reconstruct function on each cell !
@@ -136,15 +134,15 @@
 
             xhat = delx(ipos+0)*.5d+0
 
-            call plsv (ffll,hhll,ff00, &
-    &                  hh00,ffrr,hhrr, &
-    &                  dfds)
+            call plsv (dfds,mono_limit, &
+    &                  ffll,hhll,ff00 , &
+    &                  hh00,ffrr,hhrr)
             else
             
             xhat = delx(    +1)*.5d+0
             
-            call plsc (ffll,ff00,ffrr, &
-    &                  dfds)
+            call plsc (dfds,mono_limit, &
+    &                  ffll,ff00,ffrr)
 
             end if              
 
@@ -266,19 +264,21 @@
         implicit none
 
     !------------------------------------------- arguments !
-        real*8 , intent(in)    :: ff00
-        real*8 , intent(in)    :: ffll,ffrr
-        real*8 , intent(inout) :: fell,ferr
-        real*8 , intent(inout) :: dell,derr
-        real*8 , intent(in)    :: dfds(-1:+1)
-        real*8 , intent(out)   :: uhat(+1:+5)
-        real*8 , intent(out)   :: lhat(+1:+5)
-        integer, intent(out)   :: mono
+        real(kind=dp), intent(in)    :: ff00
+        real(kind=dp), intent(in)    :: ffll,ffrr
+        real(kind=dp), intent(inout) :: fell,ferr
+        real(kind=dp), intent(inout) :: dell,derr
+        real(kind=dp), intent(in)    :: dfds(-1:+1)
+        real(kind=dp), intent(out)   :: uhat(+1:+5)
+        real(kind=dp), intent(out)   :: lhat(+1:+5)
+        integer      , intent(out)   :: mono
           
     !------------------------------------------- variables !
-        integer :: turn
-        real*8  :: grad, iflx(+1:+2)
-        logical :: haveroot
+        integer         :: turn
+        real(kind=dp)   :: grad
+        real(kind=dp)   :: iflx(+1:+2)
+        real(kind=dp)   :: junk(+1:+3)
+        logical         :: haveroot
         
     !-------------------------------- "null" slope-limiter !
         
@@ -322,40 +322,44 @@
               
         end if
 
+    !----------------------------------- limit edge slopes !
+
+        if (dell * dfds(-1) .lt. 0.d+0) then
+
+            lhat(:) =  0.0d+0
+            call ppmfn(ff00,ffll,ffrr,fell,&
+    &                  ferr,dfds,junk,lhat,&
+    &                  mono)
+            mono = +1; return
+
+        end if
+
+        if (derr * dfds(+1) .lt. 0.d+0) then
+
+            lhat(:) =  0.0d+0
+            call ppmfn(ff00,ffll,ffrr,fell,&
+    &                  ferr,dfds,junk,lhat,&
+    &                  mono)
+            mono = +1; return
+
+        end if
+
     !----------------------------------- limit edge values !
 
         if((ffll - fell) * &
     &      (fell - ff00) .le. 0.d+0) then
 
             mono = +1
-       
             fell = ff00 - dfds(0)
-
-        end if
-
-        if (dell * dfds(0) .lt. 0.d+0) then
-
-            mono = +1
-
-            dell = dfds(0)
- 
+            
         end if
 
         if((ffrr - ferr) * &
     &      (ferr - ff00) .le. 0.d+0) then
 
             mono = +1
-
             ferr = ff00 + dfds(0)
-         
-        end if
-
-        if (derr * dfds(0) .lt. 0.d+0) then
-
-            mono = +1
-
-            derr = dfds(0)
-
+            
         end if
     
     !----------------------------------- limit cell values !
@@ -390,8 +394,8 @@
 
         turn = +0
 
-        if ( ( iflx(1) .gt. -1.d+0 ) &
-    &  .and. ( iflx(1) .lt. +1.d+0 ) ) then
+        if ( ( iflx(1) .ge. -1.d+0 ) &
+    &  .and. ( iflx(1) .le. +1.d+0 ) ) then
 
     !------------------ check for non-monotonic inflection !
 
@@ -400,7 +404,18 @@
     &+ (iflx(1)**2) * 3.d+0* lhat(4) &
     &+ (iflx(1)**3) * 4.d+0* lhat(5)
 
-        if (grad * dfds(0) .lt. 0.d+0) then
+        if (grad * dfds(0) .le. 0.d+0) then
+
+            ferr = ffrr
+            fell = ffll
+
+            lhat(:) =  0.0d+0
+            call ppmfn(ff00,ffll,ffrr,fell,&
+    &                  ferr,dfds,junk,lhat,&
+    &                  mono)
+            mono = +2; return
+
+
 
             if (abs(dfds(-1)) &
     &      .lt. abs(dfds(+1)) ) then
@@ -417,8 +432,8 @@
 
         end if
             
-        if ( ( iflx(2) .gt. -1.d+0 ) &
-    &  .and. ( iflx(2) .lt. +1.d+0 ) ) then
+        if ( ( iflx(2) .ge. -1.d+0 ) &
+    &  .and. ( iflx(2) .le. +1.d+0 ) ) then
 
     !------------------ check for non-monotonic inflection !
                 
@@ -427,7 +442,19 @@
     &+ (iflx(2)**2) * 3.d+0* lhat(4) &
     &+ (iflx(2)**3) * 4.d+0* lhat(5)
 
-        if (grad * dfds(0) .lt. 0.d+0) then
+        if (grad * dfds(0) .le. 0.d+0) then
+
+            ferr = ffrr
+            fell = ffll
+
+            lhat(:) =  0.0d+0
+            call ppmfn(ff00,ffll,ffrr,fell,&
+    &                  ferr,dfds,junk,lhat,&
+    &                  mono)
+            mono = +2; return
+
+
+
 
             if (abs(dfds(-1)) &
     &      .lt. abs(dfds(+1)) ) then
@@ -449,122 +476,114 @@
         if (turn .eq. -1) then
 
     !------------------ pop inflection points onto -1 edge !
+    
+            mono = +2
 
-        mono = +2
+            ferr = ffrr
+            fell = ffll
+            derr = &
+    &    - ( 5.d+0 /  1.d+0) * ff00 &
+    &    + ( 3.d+0 /  1.d+0) * ferr &
+    &    + ( 2.d+0 /  1.d+0) * fell
+            dell = &
+    &    + ( 5.d+0 /  3.d+0) * ff00 &
+    &    - ( 1.d+0 /  3.d+0) * ferr &
+    &    - ( 4.d+0 /  3.d+0) * fell
 
-        derr = &
-    &- ( 5.d+0 /  1.d+0) * ff00 &
-    &+ ( 3.d+0 /  1.d+0) * ferr &
-    &+ ( 2.d+0 /  1.d+0) * fell
-        dell = &
-    &+ ( 5.d+0 /  3.d+0) * ff00 &
-    &- ( 1.d+0 /  3.d+0) * ferr &
-    &- ( 4.d+0 /  3.d+0) * fell
+            if (dell*dfds(-1) .lt. 0.d+0) then
 
-        if (dell*dfds(+0) .lt. 0.d+0) then
+            lhat(:) =  0.0d+0
+            call ppmfn(ff00,ffll,ffrr,fell,&
+    &                  ferr,dfds,junk,lhat,&
+    &                  mono)
+            mono = +2; return
 
-        dell =   0.d+0
+            else &
+    &       if (derr*dfds(+1) .lt. 0.d+0) then
 
-        ferr = &
-    &+ ( 5.d+0 /  1.d+0) * ff00 &
-    &- ( 4.d+0 /  1.d+0) * fell
-        derr = &
-    &+ (10.d+0 /  1.d+0) * ff00 &
-    &- (10.d+0 /  1.d+0) * fell
+            lhat(:) =  0.0d+0
+            call ppmfn(ff00,ffll,ffrr,fell,&
+    &                  ferr,dfds,junk,lhat,&
+    &                  mono)
+            mono = +2; return
 
-        else &
-    &   if (derr*dfds(+0) .lt. 0.d+0) then
+            end if
 
-        derr =   0.d+0
-
-        fell = &
-    &+ ( 5.d+0 /  2.d+0) * ff00 &
-    &- ( 3.d+0 /  2.d+0) * ferr
-        dell = &
-    &- ( 5.d+0 /  3.d+0) * ff00 &
-    &+ ( 5.d+0 /  3.d+0) * ferr
-
-        end if
-
-        lhat(1) = &
-    &+ (30.d+0 / 16.d+0) * ff00 &
-    &- ( 7.d+0 / 16.d+0) *(ferr+fell) &
-    &+ ( 1.d+0 / 16.d+0) *(derr-dell)
-        lhat(2) = &
-    &+ ( 3.d+0 /  4.d+0) *(ferr-fell) &
-    &- ( 1.d+0 /  4.d+0) *(derr+dell)
-        lhat(3) = &
-    &- (30.d+0 /  8.d+0) * ff00 &
-    &+ (15.d+0 /  8.d+0) *(ferr+fell) &
-    &- ( 3.d+0 /  8.d+0) *(derr-dell)
-        lhat(4) = &
-    &- ( 1.d+0 /  4.d+0) *(ferr-fell  &
-    &                     -derr-dell)
-        lhat(5) = &
-    &+ (30.d+0 / 16.d+0) * ff00 &
-    &- (15.d+0 / 16.d+0) *(ferr+fell) &
-    &+ ( 5.d+0 / 16.d+0) *(derr-dell)
+            lhat(1) = &
+    &    + (30.d+0 / 16.d+0) * ff00 &
+    &    - ( 7.d+0 / 16.d+0) *(ferr+fell) &
+    &    + ( 1.d+0 / 16.d+0) *(derr-dell)
+            lhat(2) = &
+    &    + ( 3.d+0 /  4.d+0) *(ferr-fell) &
+    &    - ( 1.d+0 /  4.d+0) *(derr+dell)
+            lhat(3) = &
+    &    - (30.d+0 /  8.d+0) * ff00 &
+    &    + (15.d+0 /  8.d+0) *(ferr+fell) &
+    &    - ( 3.d+0 /  8.d+0) *(derr-dell)
+            lhat(4) = &
+    &    - ( 1.d+0 /  4.d+0) *(ferr-fell  &
+    &                         -derr-dell)
+            lhat(5) = &
+    &    + (30.d+0 / 16.d+0) * ff00 &
+    &    - (15.d+0 / 16.d+0) *(ferr+fell) &
+    &    + ( 5.d+0 / 16.d+0) *(derr-dell)
 
         end if
 
         if (turn .eq. +1) then
 
-    !------------------ pop inflection points onto -1 edge !
-    
-        mono = +2
+    !------------------ pop inflection points onto +1 edge !
 
-        derr = &
-    &- ( 5.d+0 /  3.d+0) * ff00 &
-    &+ ( 4.d+0 /  3.d+0) * ferr &
-    &+ ( 1.d+0 /  3.d+0) * fell
-        dell = &
-    &+ ( 5.d+0 /  1.d+0) * ff00 &
-    &- ( 2.d+0 /  1.d+0) * ferr &
-    &- ( 3.d+0 /  1.d+0) * fell
+            mono = +2
 
-        if (dell*dfds(+0) .lt. 0.d+0) then
+            ferr = ffrr
+            fell = ffll
+            derr = &
+    &    - ( 5.d+0 /  3.d+0) * ff00 &
+    &    + ( 4.d+0 /  3.d+0) * ferr &
+    &    + ( 1.d+0 /  3.d+0) * fell
+            dell = &
+    &    + ( 5.d+0 /  1.d+0) * ff00 &
+    &    - ( 2.d+0 /  1.d+0) * ferr &
+    &    - ( 3.d+0 /  1.d+0) * fell
 
-        dell =   0.d+0
+            if (dell*dfds(-1) .lt. 0.d+0) then
 
-        ferr = &
-    &+ ( 5.d+0 /  2.d+0) * ff00 &
-    &- ( 3.d+0 /  2.d+0) * fell
-        derr = &
-    &+ ( 5.d+0 /  3.d+0) * ff00 &
-    &- ( 5.d+0 /  3.d+0) * fell
+            lhat(:) =  0.0d+0
+            call ppmfn(ff00,ffll,ffrr,fell,&
+    &                  ferr,dfds,junk,lhat,&
+    &                  mono)
+            mono = +2; return
 
-        else & 
-    &   if (derr*dfds(+0) .lt. 0.d+0) then
+            else & 
+    &       if (derr*dfds(+1) .lt. 0.d+0) then
 
-        derr =   0.d+0
+            lhat(:) =  0.0d+0
+            call ppmfn(ff00,ffll,ffrr,fell,&
+    &                  ferr,dfds,junk,lhat,&
+    &                  mono)
+            mono = +2; return
 
-        fell = &
-    &+ ( 5.d+0 /  1.d+0) * ff00 &
-    &- ( 4.d+0 /  1.d+0) * ferr
-        dell = &
-    &- (10.d+0 /  1.d+0) * ff00 &
-    &+ (10.d+0 /  1.d+0) * ferr
+            end if
 
-        end if
-
-        lhat(1) = &
-    &+ (30.d+0 / 16.d+0) * ff00 &
-    &- ( 7.d+0 / 16.d+0) *(ferr+fell) &
-    &+ ( 1.d+0 / 16.d+0) *(derr-dell)
-        lhat(2) = &
-    &+ ( 3.d+0 /  4.d+0) *(ferr-fell) &
-    &- ( 1.d+0 /  4.d+0) *(derr+dell)
-        lhat(3) = &
-    &- (30.d+0 /  8.d+0) * ff00 &
-    &+ (15.d+0 /  8.d+0) *(ferr+fell) &
-    &- ( 3.d+0 /  8.d+0) *(derr-dell)
-        lhat(4) = &
-    &- ( 1.d+0 /  4.d+0) *(ferr-fell  &
-    &                     -derr-dell)
-        lhat(5) = &
-    &+ (30.d+0 / 16.d+0) * ff00 &
-    &- (15.d+0 / 16.d+0) *(ferr+fell) &
-    &+ ( 5.d+0 / 16.d+0) *(derr-dell)
+            lhat(1) = &
+    &    + (30.d+0 / 16.d+0) * ff00 &
+    &    - ( 7.d+0 / 16.d+0) *(ferr+fell) &
+    &    + ( 1.d+0 / 16.d+0) *(derr-dell)
+            lhat(2) = &
+    &    + ( 3.d+0 /  4.d+0) *(ferr-fell) &
+    &    - ( 1.d+0 /  4.d+0) *(derr+dell)
+            lhat(3) = &
+    &    - (30.d+0 /  8.d+0) * ff00 &
+    &    + (15.d+0 /  8.d+0) *(ferr+fell) &
+    &    - ( 3.d+0 /  8.d+0) *(derr-dell)
+            lhat(4) = &
+    &    - ( 1.d+0 /  4.d+0) *(ferr-fell  &
+    &                         -derr-dell)
+            lhat(5) = &
+    &    + (30.d+0 / 16.d+0) * ff00 &
+    &    - (15.d+0 / 16.d+0) *(ferr+fell) &
+    &    + ( 5.d+0 / 16.d+0) *(derr-dell)
 
         end if
     

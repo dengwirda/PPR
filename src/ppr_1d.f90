@@ -32,82 +32,86 @@
     ! PPR-1D.f90: 1-d piecewise polynomial reconstructions.
     !
     ! Darren Engwirda 
-    ! 31-Mar-2019
-    ! de2363 [at] columbia [dot] edu
+    ! 25-Oct-2021
+    ! d [dot] engwirda [at] gmail [dot] com
     !
     !
 
     implicit none
 
+    integer, parameter      :: sp = kind(+1.0e+00)
+    integer, parameter      :: dp = kind(+1.0d+00)
+
     !------------------------------------ compile-time def !
 
-!   define __PPR_WARNMAT__
-!   define __PPR_DOTIMER__
+!   define __PPR_PIVOT__
+!   define __PPR_TIMER__
 
-#   ifdef  __PPR_DOTIMER__
+#   ifdef  __PPR_TIMER__
 
 #       define __TIC__                      \
         call system_clock   (ttic,rate)
 
 #       define __TOC__(time, mark)          \
         call system_clock   (ttoc,rate) ;   \
-        if ( present(time)) \
+        if ( present(time) ) \
         time%mark=time%mark+(ttoc-ttic)
     
 #   else
 
 #       define __TIC__
-#       define __TOC__(time, mark)
+#       define __TOC__(time, mark)          \
+        if ( present(time) ) time%mark = + 0
 
 #   endif
 
     !------------------------------------ method selection !
         
-    integer, parameter :: p1e_method = +100
-    integer, parameter :: p3e_method = +101
-    integer, parameter :: p5e_method = +102
+    integer(kind=4), parameter :: p1e_method = +100
+    integer(kind=4), parameter :: p3e_method = +101
+    integer(kind=4), parameter :: p5e_method = +102
 
-    integer, parameter :: pcm_method = +200
-    integer, parameter :: plm_method = +201
-    integer, parameter :: ppm_method = +202
-    integer, parameter :: pqm_method = +203
+    integer(kind=4), parameter :: pcm_method = +200
+    integer(kind=4), parameter :: plm_method = +201
+    integer(kind=4), parameter :: ppm_method = +202
+    integer(kind=4), parameter :: pqm_method = +203
 
-    integer, parameter :: null_limit = +300
-    integer, parameter :: mono_limit = +301
-    integer, parameter :: weno_limit = +302
+    integer(kind=4), parameter :: null_limit = +300
+    integer(kind=4), parameter :: mono_limit = +301
+    integer(kind=4), parameter :: weno_limit = +302
 
-    integer, parameter :: bcon_loose = +400
-    integer, parameter :: bcon_value = +401
-    integer, parameter :: bcon_slope = +402
+    integer(kind=4), parameter :: bcon_loose = +400
+    integer(kind=4), parameter :: bcon_value = +401
+    integer(kind=4), parameter :: bcon_slope = +402
  
     type rmap_tics
     !------------------------------- tCPU timer for RCON1D !
-        integer :: rmap_time
-        integer :: edge_time
-        integer :: cell_time
-        integer :: oscl_time
+        integer(kind=8)             :: rmap_time
+        integer(kind=8)             :: edge_time
+        integer(kind=8)             :: cell_time
+        integer(kind=8)             :: oscl_time
     end type rmap_tics
 
     type rcon_opts
     !------------------------------- parameters for RCON1D !
-        integer :: edge_meth
-        integer :: cell_meth
-        integer :: cell_lims
-        integer :: wall_lims
+        integer(kind=4)             :: edge_meth
+        integer(kind=4)             :: cell_meth
+        integer(kind=4)             :: cell_lims
+        integer(kind=4)             :: wall_lims
     end type rcon_opts
 
     type rcon_ends
     !------------------------------- end-conditions struct !
-        integer :: bcopt
-        real*8  :: value
-        real*8  :: slope
+        integer                     :: bcopt
+        real(kind=dp)               :: value
+        real(kind=dp)               :: slope
     end type rcon_ends
 
     type rcon_work
     !------------------------------- work-space for RCON1D !
-        real*8, allocatable  :: edge_func(:,:)
-        real*8, allocatable  :: edge_dfdx(:,:)
-        real*8, allocatable  :: cell_oscl(:,:,:)
+        real(kind=dp), allocatable  :: edge_func(:,:)
+        real(kind=dp), allocatable  :: edge_dfdx(:,:)
+        real(kind=dp), allocatable  :: cell_oscl(:,:,:)
     contains
         procedure :: init => init_rcon_work
         procedure :: free => free_rcon_work
@@ -119,8 +123,8 @@
 
     type, extends(rcon_work) :: rmap_work
     !------------------------------- work-space for RMAP1D !
-        real*8, allocatable  :: cell_spac(:)
-        real*8, allocatable  :: cell_func(:,:,:)
+        real(kind=dp), allocatable  :: cell_spac(:)
+        real(kind=dp), allocatable  :: cell_func(:,:,:)
     contains
         procedure :: init => init_rmap_work
         procedure :: free => free_rmap_work
@@ -150,7 +154,9 @@
         class(rcon_opts) , optional      :: opts
 
     !------------------------------------------- variables !
-        integer :: okay
+        integer :: okay,ndof
+
+        ndof = ndof1d(opts%cell_meth)
 
         allocate(this% &
         &   edge_func(  nvar,npos), &
@@ -253,28 +259,28 @@
     !------------------------------------------- variables !
         integer  :: rdof
 
-        select case(meth)
     !-------------------------------- edge reconstructions !
-        case (p1e_method)
+        if      (meth.eq.p1e_method) then 
             rdof = +2
-        case (p3e_method)
+        else if (meth.eq.p3e_method) then 
             rdof = +4
-        case (p5e_method)
+        else if (meth.eq.p5e_method) then
             rdof = +6
-    !-------------------------------- cell reconstructions !
-        case (pcm_method)
-            rdof = +1
-        case (plm_method)
-            rdof = +2
-        case (ppm_method)
-            rdof = +3
-        case (pqm_method)
-            rdof = +5
-        
-        case default 
-            rdof = +0
 
-        end select
+    !-------------------------------- cell reconstructions !
+        else if (meth.eq.pcm_method) then
+            rdof = +1
+        else if (meth.eq.plm_method) then
+            rdof = +2
+        else if (meth.eq.ppm_method) then
+            rdof = +3
+        else if (meth.eq.pqm_method) then
+            rdof = +5
+
+        else
+            rdof = +0               ! default
+        
+        end if
         
     end function  ndof1d
 

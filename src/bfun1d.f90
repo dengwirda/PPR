@@ -31,7 +31,7 @@
     !
     ! Darren Engwirda 
     ! 07-Sep-2016
-    ! de2363 [at] columbia [dot] edu
+    ! d [dot] engwirda [at] gmail [dot] com
     !
     !
 
@@ -50,9 +50,9 @@
         implicit none
         
     !------------------------------------------- arguments !
-        integer, intent( in) :: isel,ndof
-        real*8 , intent( in) :: sval
-        real*8 , intent(out) :: bfun(:)
+        integer      , intent(in)   :: isel,ndof
+        real(kind=dp), intent(in)   :: sval
+        real(kind=dp), intent(out)  :: bfun(:)
         
         select case (isel)
         case (-1)

@@ -31,7 +31,7 @@
     !
     ! Darren Engwirda 
     ! 25-Mar-2019
-    ! de2363 [at] columbia [dot] edu
+    ! d [dot] engwirda [at] gmail [dot] com
     !
     !
 
@@ -44,14 +44,14 @@
         implicit none
 
     !------------------------------------------- arguments !
-        real*8 , intent( in) :: aa,bb,cc
-        real*8 , intent(out) :: xx(1:2)
-        logical, intent(out) :: haveroot
+        real(kind=dp), intent(in)   :: aa,bb,cc
+        real(kind=dp), intent(out)  :: xx(1:2)
+        logical      , intent(out)  :: haveroot
 
     !------------------------------------------- variables !
-        real*8 :: sq,ia,a0,b0,c0,x0
+        real(kind=dp) :: sq,ia,a0,b0,c0,x0
 
-        real*8, parameter :: rt = +1.d-14
+        real(kind=dp), parameter :: rt = +1.d-14
 
         a0 = abs(aa)
         b0 = abs(bb)

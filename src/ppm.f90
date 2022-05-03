@@ -30,8 +30,8 @@
     ! PPM.f90: 1d slope-limited, piecewise parabolic recon.
     !
     ! Darren Engwirda 
-    ! 08-Sep-2016
-    ! de2363 [at] columbia [dot] edu
+    ! 06-Nov-2021
+    ! d [dot] engwirda [at] gmail [dot] com
     !
     !
   
@@ -42,8 +42,8 @@
     !
 
     pure subroutine ppm(npos,nvar,ndof,delx, &
-        &               fdat,fhat,edge,oscl, &
-        &               dmin,ilim,wlim,halo)
+        &               fdat,fhat,edge, &
+        &               oscl,ilim,wlim,halo)
 
     !
     ! NPOS  no. edges over grid.
@@ -59,7 +59,6 @@
     !       is an array with SIZE = NVAR-by-NPOS .
     ! OSCL  grid-cell oscil. dof.'s. OSCL is an array with
     !       SIZE = +2  -by-NVAR-by-NPOS-1 .
-    ! DMIN  min. grid-cell spacing thresh . 
     ! ILIM  cell slope-limiting selection .
     ! WLIM  wall slope-limiting selection .
     ! HALO  width of re-con. stencil, symmetric about mid. .
@@ -68,24 +67,23 @@
         implicit none
 
     !------------------------------------------- arguments !
-        integer, intent(in)  :: npos,nvar,ndof
-        real*8 , intent(in)  :: dmin
-        real*8 , intent(out) :: fhat(:,:,:)
-        real*8 , intent(in)  :: oscl(:,:,:)
-        real*8 , intent(in)  :: delx(:)
-        real*8 , intent(in)  :: fdat(:,:,:)
-        real*8 , intent(in)  :: edge(:,:)
-        integer, intent(in)  :: ilim,wlim,halo
+        integer      , intent(in)  :: npos,nvar,ndof
+        real(kind=dp), intent(out) :: fhat(:,:,:)
+        real(kind=dp), intent(in)  :: oscl(:,:,:)
+        real(kind=dp), intent(in)  :: delx(:)
+        real(kind=dp), intent(in)  :: fdat(:,:,:)
+        real(kind=dp), intent(in)  :: edge(:,:)
+        integer      , intent(in)  :: ilim,wlim,halo
 
     !------------------------------------------- variables !
-        integer :: ipos,ivar,iill,iirr,head,tail
-        real*8  :: ff00,ffll,ffrr,hh00,hhll,hhrr
-        integer :: mono
-        real*8  :: fell,ferr
-        real*8  :: dfds(-1:+1)
-        real*8  :: wval(+1:+2)
-        real*8  :: uhat(+1:+3)
-        real*8  :: lhat(+1:+3)
+        integer       :: ipos,ivar,iill,iirr,head,tail
+        real(kind=dp) :: ff00,ffll,ffrr,hh00,hhll,hhrr
+        integer       :: mono
+        real(kind=dp) :: fell,ferr
+        real(kind=dp) :: dfds(-1:+1)
+        real(kind=dp) :: wval(+1:+2)
+        real(kind=dp) :: uhat(+1:+3)
+        real(kind=dp) :: lhat(+1:+3)
         
         head = +1; tail = npos - 1
 
@@ -99,6 +97,7 @@
         end do
         end if
 
+        if (ndof.le.0) return
         if (npos.le.2) return
 
     !------------------- reconstruct function on each cell !
@@ -130,13 +129,13 @@
             hhll = delx(iill)
             hhrr = delx(iirr)
 
-            call plsv (ffll,hhll,ff00, &
-    &                  hh00,ffrr,hhrr, &
-    &                  dfds)
+            call plsv (dfds,mono_limit, &
+    &                  ffll,hhll,ff00 , &
+    &                  hh00,ffrr,hhrr)
             else
             
-            call plsc (ffll,ff00,ffrr, &
-    &                  dfds)
+            call plsc (dfds,mono_limit, &
+    &                  ffll,ff00,ffrr)
     
             end if
 
@@ -241,16 +240,16 @@
         implicit none
 
     !------------------------------------------- arguments !
-        real*8 , intent(in)    :: ff00
-        real*8 , intent(in)    :: ffll,ffrr
-        real*8 , intent(inout) :: fell,ferr
-        real*8 , intent(in)    :: dfds(-1:+1)
-        real*8 , intent(out)   :: uhat(+1:+3)
-        real*8 , intent(out)   :: lhat(+1:+3)
-        integer, intent(out)   :: mono
+        real(kind=dp), intent(in)    :: ff00
+        real(kind=dp), intent(in)    :: ffll,ffrr
+        real(kind=dp), intent(inout) :: fell,ferr
+        real(kind=dp), intent(in)    :: dfds(-1:+1)
+        real(kind=dp), intent(out)   :: uhat(+1:+3)
+        real(kind=dp), intent(out)   :: lhat(+1:+3)
+        integer      , intent(out)   :: mono
           
     !------------------------------------------- variables !
-        real*8  :: turn
+        real(kind=dp)   :: turn,fmid,fmin,fmax
         
         mono  = 0
         
@@ -288,7 +287,6 @@
     &      (fell - ff00) .le. 0.d+0) then
 
             mono = +1
-       
             fell = ff00 - dfds(0)
 
         end if
@@ -297,7 +295,6 @@
     &      (ferr - ff00) .le. 0.d+0) then
 
             mono = +1
-
             ferr = ff00 + dfds(0)
          
         end if
@@ -328,10 +325,23 @@
 
     !--------------------------- push TURN onto lower edge !
 
+        fell =  &              ! steepening...
+    & + (1.0d+0 / 2.0d+0) * ffll &
+    & + (1.0d+0 / 2.0d+0) * fell
+
         ferr =   +3.0d+0  * ff00 &
     &            -2.0d+0  * fell
 
-        lhat( 1 ) = &
+        if((ffrr - ferr) * &   ! double-check monotonicity !
+    &      (ferr - ff00) .le. 0.d+0) then
+            
+        lhat(1) = ff00         ! reduce to PLM
+        lhat(2) = dfds(0)
+        lhat(3) = 0.0d+0
+
+        else
+
+        lhat( 1 ) = &          ! update to PPM
     & + (3.0d+0 / 2.0d+0) * ff00 &
     & - (1.0d+0 / 4.0d+0) *(ferr+fell)
         lhat( 2 ) = &
@@ -340,18 +350,32 @@
     & - (3.0d+0 / 2.0d+0) * ff00 &
     & + (3.0d+0 / 4.0d+0) *(ferr+fell)
 
+        end if
+
         else &
-    &   if ((turn .gt. +0.d+0)&
-    &  .and.(turn .le. +1.d+0)) then
+    &   if ((turn .le. +1.d+0)) then
 
         mono =   +2
 
     !--------------------------- push TURN onto upper edge !
-    
+
+        ferr =  &              ! steepening...
+    & + (1.0d+0 / 2.0d+0) * ffrr &
+    & + (1.0d+0 / 2.0d+0) * ferr
+
         fell =   +3.0d+0  * ff00 &
     &            -2.0d+0  * ferr
 
-        lhat( 1 ) = &
+        if((ffll - fell) * &   ! double-check monotonicity !
+    &      (fell - ff00) .le. 0.d+0) then
+            
+        lhat(1) = ff00         ! reduce to PLM
+        lhat(2) = dfds(0)
+        lhat(3) = 0.0d+0
+        
+        else 
+
+        lhat( 1 ) = &          ! update to PPM
     & + (3.0d+0 / 2.0d+0) * ff00 &
     & - (1.0d+0 / 4.0d+0) *(ferr+fell)
         lhat( 2 ) = &
@@ -360,6 +384,8 @@
     & - (3.0d+0 / 2.0d+0) * ff00 &
     & + (3.0d+0 / 4.0d+0) *(ferr+fell)
    
+        end if
+
         end if
       
         end if

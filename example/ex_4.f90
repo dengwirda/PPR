@@ -1,5 +1,5 @@
 
-!   gfortran -cpp -O3 -flto ex_4.f90 -o ex_4
+!   gfortran -pedantic -cpp -O3 -flto ex_4.f90 -o ex_4
 !   ./ex_4
 
 !   Test for multi-tracer remapping: remap a set of profiles
@@ -21,8 +21,8 @@
         integer :: ipos
 
     !------------------------------ position of cell edges !
-        real*8  :: xpos(npos),xtmp(ntmp)
-        real*8  :: xdel,xmid
+        real(kind=dp) :: xpos(npos),xtmp(ntmp)
+        real(kind=dp) :: xmid
         
     !-------------------------------- finite-volume arrays !
 
@@ -35,9 +35,9 @@
     !   batch is typically more efficient than one-by-one. 
     !   The last dim. is the no. cells (layers) in the grid.
 
-        real*8  :: init(ndof,nvar,npos-1)
-        real*8  :: ftmp(ndof,nvar,ntmp-1)
-        real*8  :: fdat(ndof,nvar,npos-1)
+        real(kind=dp) :: init(ndof,nvar,npos-1)
+        real(kind=dp) :: fdat(ndof,nvar,npos-1)        
+        real(kind=dp) :: ftmp(ndof,nvar,ntmp-1)
 
     !------------------------------ method data-structures !
         type(rmap_work) :: work
@@ -70,8 +70,8 @@
 
     !------------------------------ specify method options !
 
-        opts%edge_meth = p5e_method     ! 5th-order edge interp.
-        opts%cell_meth = pqm_method     ! PQM method in cells
+        opts%edge_meth = p3e_method     ! 5th-order edge interp.
+        opts%cell_meth = ppm_method     ! PQM method in cells
         opts%cell_lims = mono_limit     ! monotone limiter
         
     !------------------------------ set BC.'s at endpoints !

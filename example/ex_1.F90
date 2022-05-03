@@ -1,13 +1,13 @@
 
-!   gfortran -pedantic -cpp -O3 -flto ex_2.f90 -o ex_2
-!   ./ex_2
+!   gfortran -pedantic -O3 -flto ex_1.F90 -o ex_1
+!   ./ex_1
 
-!   Test for the monotone limiter: remap a stairstep profile
-!   between randomly perturbed grids. When MONO-LIMIT is
-!   selected, all methods should lead to monotone behaviour. 
+!   Same as ex_1.f90, but with a capitalised *.F90 to enable
+!   the preprocessor directives without the -cpp flag. 
 !
 
-#   include "../src/ppr_1d.f90"
+!   note: *.F90!
+#   include "../src/ppr_1d.F90"
 
     program ex
 
@@ -15,8 +15,8 @@
 
         implicit none
 
-        integer, parameter :: npos = 97 ! no. edge (old grid) 
-        integer, parameter :: ntmp = 77 ! no. edge (new grid)
+        integer, parameter :: npos = 31 ! no. edge (old grid) 
+        integer, parameter :: ntmp = 23 ! no. edge (new grid)
         integer, parameter :: nvar = 1  ! no. variables to remap
         integer, parameter :: ndof = 1  ! no. FV DoF per cell
         integer :: ipos
@@ -39,7 +39,7 @@
         real(kind=dp) :: init(ndof,nvar,npos-1)
         real(kind=dp) :: fdat(ndof,nvar,npos-1)        
         real(kind=dp) :: ftmp(ndof,nvar,ntmp-1)
-        
+
     !------------------------------ method data-structures !
         type(rmap_work) :: work
         type(rmap_opts) :: opts
@@ -49,32 +49,24 @@
     !------------------------------ define a simple domain !
 
         call linspace(0.d0,1.d0,npos,xpos)
-        call rndspace(0.d0,1.d0,ntmp,xtmp)
+        call linspace(0.d0,1.d0,ntmp,xtmp)
 
     !------------------------------ setup some simple data !
 
         do ipos = +1, npos-1
 
             xmid = xpos(ipos+0) * 0.5d+0 &
-        &        + xpos(ipos+1) * 0.5d+0
+    &            + xpos(ipos+1) * 0.5d+0
 
-            if (xmid .lt. 0.075d0) then
-            init(1,1,ipos) = +1.0d0
-            else &
-            if (xmid .lt. 0.80d0) then
-            init(1,1,ipos) = +2.0d0
-            else
-            init(1,1,ipos) = -0.5d0 * xmid ** 2
-            end if
-
+            init(1,1,ipos) = xmid ** 2
+            
         end do
 
     !------------------------------ specify method options !
 
-        opts%edge_meth = p5e_method     ! 5th-order edge interp.
-        opts%cell_meth = pqm_method     ! PQM method in cells
-        opts%cell_lims = mono_limit     ! monotone limiter
-       !opts%wall_lims = weno_limit
+        opts%edge_meth = p3e_method     ! 3rd-order edge interp.
+        opts%cell_meth = ppm_method     ! PPM method in cells
+        opts%cell_lims = null_limit     ! no slope limiter
         
     !------------------------------ set BC.'s at endpoints !
 

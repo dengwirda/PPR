@@ -1,0 +1,31 @@
+language: fortran
+matrix:
+  include:
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - gcc-8
+            - gfortran-8
+      script:
+        - export FC=gfortran-8
+        - $FC --version
+        - cd example
+        - $FC -pedantic -cpp -O3 -flto ex_1.f90 -o ex_1
+        - ./ex_1
+        - $FC -pedantic -O3 -flto ex_1.F90 -o ex_1
+        - ./ex_1
+        - $FC -pedantic -cpp -O3 -flto ex_2.f90 -o ex_2
+        - ./ex_2
+        - $FC -pedantic -cpp -O3 -flto ex_3.f90 -o ex_3
+        - ./ex_3
+        - $FC -pedantic -cpp -O3 -flto ex_4.f90 -o ex_4
+        - ./ex_4
+        - $FC -pedantic -cpp -O3 -flto ex_5.f90 -o ex_5
+        - ./ex_5
+        - $FC -pedantic -cpp -O3 -flto ex_6.f90 -o ex_6
+        - ./ex_6
+        - $FC -pedantic -cpp -O3 -flto ex_7.f90 -o ex_7
+        - ./ex_7

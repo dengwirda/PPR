@@ -30,8 +30,8 @@
     ! P1E.f90: set edge estimates via degree-1 polynomials.
     !
     ! Darren Engwirda 
-    ! 09-Sep-2016
-    ! de2363 [at] columbia [dot] edu
+    ! 25-Oct-2021
+    ! d [dot] engwirda [at] gmail [dot] com
     !
     !
 
@@ -60,20 +60,21 @@
         implicit none
 
     !------------------------------------------- arguments !
-        integer, intent( in) :: npos,nvar,ndof
-        real*8 , intent( in) :: delx(:)
-        real*8 , intent( in) :: fdat(:,:,:)
-        type (rcon_ends), intent(in) :: bclo(:)
-        type (rcon_ends), intent(in) :: bchi(:)
-        real*8 , intent(out) :: edge(:,:)
-        real*8 , intent(out) :: dfdx(:,:)
-        real*8 , intent( in) :: dmin
-        class(rcon_opts), intent(in) :: opts
+        integer         , intent(in)    :: npos,nvar,ndof
+        real(kind=dp)   , intent(in)    :: delx(:)
+        real(kind=dp)   , intent(in)    :: fdat(:,:,:)
+        type (rcon_ends), intent(in)    :: bclo(:)
+        type (rcon_ends), intent(in)    :: bchi(:)
+        real(kind=dp)   , intent(out)   :: edge(:,:)
+        real(kind=dp)   , intent(out)   :: dfdx(:,:)
+        real(kind=dp)   , intent(in)    :: dmin
+        class(rcon_opts), intent(in)    :: opts
 
     !------------------------------------------- variables !
-        integer :: ipos,ivar,head,tail
-        real*8  :: dd10
-        real*8  :: delh(-1:+0)
+        integer                         :: ipos,ivar,bopt
+        integer                         :: head,tail
+        real(kind=dp)                   :: dd10
+        real(kind=dp)                   :: delh(-1:+0)
 
         head = +2; tail = npos-1
 
@@ -91,7 +92,11 @@
         end do
         end if
 
+        if (ndof.le.0) return
         if (npos.le.2) return
+
+        if (opts%edge_meth &
+    &  .lt.p1e_method) return
    
     ! Reconstruct edge-centred 2nd-order polynomials. Com- !
     ! pute values/slopes at edges directly. Full-order ex- !
@@ -114,9 +119,9 @@
         &       fdat(1,ivar,ipos+0)
 
                 dfdx(ivar,ipos) = &
-        &         - 2.0d+0 *  &
+        &         - 2.00d+00 * &
         &       fdat(1,ivar,ipos-1) &
-        &         + 2.0d+0 *  &
+        &         + 2.00d+00 * &
         &       fdat(1,ivar,ipos+0)
 
                 edge(ivar,ipos) = &
@@ -150,9 +155,9 @@
         &       fdat(1,ivar,ipos+0)
 
                 dfdx(ivar,ipos) = &
-        &         - 2.0d+0 *  &
+        &         - 2.00d+00 * &
         &       fdat(1,ivar,ipos-1) &
-        &         + 2.0d+0 *  &
+        &         + 2.00d+00 * &
         &       fdat(1,ivar,ipos+0)
 
                 edge(ivar,ipos) = &
@@ -170,13 +175,67 @@
 
         do  ivar = +1, nvar
 
-            edge(ivar,head-1) = &
-        &       fdat(+1,ivar,head-1)           
-            edge(ivar,tail+1) = &
-        &       fdat(+1,ivar,tail+0)
-        
-            dfdx(ivar,head-1) = 0.d0
-            dfdx(ivar,tail+1) = 0.d0
+    !------------------------------------- at LHS endpoint !
+
+            bopt = bclo(ivar)%bcopt
+            dd10 = 1.d0
+
+            if (bopt.eq.bcon_loose) then
+
+                edge(ivar,head-1) = &
+        &           fdat(+1,ivar,head-1)
+
+                dfdx(ivar,head-1) = 0.d0
+
+            else &
+        &   if (bopt.eq.bcon_value) then
+
+                edge(ivar,head-1) = &
+        &           bclo(ivar)%value
+
+                dfdx(ivar,head-1) = 0.d0
+
+            else &
+        &   if (bopt.eq.bcon_slope) then
+
+                edge(ivar,head-1) = &
+        &           fdat(+1,ivar,head-1)
+
+                dfdx(ivar,head-1) = &
+        &           bclo(ivar)%slope * dd10
+
+            end if
+
+    !------------------------------------- at RHS endpoint !
+           
+            bopt = bchi(ivar)%bcopt
+            dd10 = 1.d0
+
+            if (bopt.eq.bcon_loose) then
+
+                edge(ivar,tail+1) = &
+        &           fdat(+1,ivar,tail+0)
+            
+                dfdx(ivar,tail+1) = 0.d0
+
+            else &
+        &   if (bopt.eq.bcon_value) then
+
+                edge(ivar,tail+1) = &
+        &           bchi(ivar)%value
+            
+                dfdx(ivar,tail+1) = 0.d0
+
+            else &
+        &   if (bopt.eq.bcon_slope) then
+
+                edge(ivar,tail+1) = &
+        &           fdat(+1,ivar,tail+0)
+            
+                dfdx(ivar,tail+1) = &
+        &           bchi(ivar)%slope * dd10
+
+            end if
 
         end do
     

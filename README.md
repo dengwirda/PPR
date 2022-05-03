@@ -27,6 +27,7 @@ ex_3.f90 ! a smooth profile used for convergence tests
 ex_4.f90 ! multi-tracer re-mapping
 ex_5.f90 ! building high-order interpolants
 ex_6.f90 ! flux-form semi-lagrangian transport (in 1d)
+ex_7.f90 ! as per ex-1, but with negative orientations
 ````
 
 ## `License`

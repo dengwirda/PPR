@@ -31,7 +31,7 @@
     !
     ! Darren Engwirda 
     ! 08-Sep-2016
-    ! de2363 [at] columbia [dot] edu
+    ! d [dot] engwirda [at] gmail [dot] com
     !
     !
 
@@ -60,17 +60,17 @@
         implicit none
 
     !------------------------------------------- arguments !
-        integer, intent(in)  :: npos,halo
-        integer, intent(in)  :: ipos,ivar
-        integer, intent(in)  :: wlim
-        real*8 , intent(in)  :: delx(:)
-        real*8 , intent(in)  :: oscl(:,:,:)
-        real*8 , intent(out) :: wval(2)
+        integer      , intent(in)   :: npos,halo
+        integer      , intent(in)   :: ipos,ivar
+        integer      , intent(in)   :: wlim
+        real(kind=dp), intent(in)   :: delx(:)
+        real(kind=dp), intent(in)   :: oscl(:,:,:)
+        real(kind=dp), intent(out)  :: wval(2)
     
     !------------------------------------------- variables !
-        real*8 :: omin,omax,wsum
+        real(kind=dp) :: omin,omax,wsum
         
-        real*8 , parameter :: ZERO = +1.d-16
+        real(kind=dp), parameter :: ZERO = +1.d-16
        
         if (size(delx).gt.+1) then
         
@@ -142,21 +142,21 @@
         implicit none
 
     !------------------------------------------- arguments !
-        integer, intent(in)  :: npos,halo
-        integer, intent(in)  :: ipos,ivar
-        integer, intent(in)  :: wlim
-        real*8 , intent(in)  :: delx(:)
-        real*8 , intent(in)  :: oscl(:,:,:)
-        real*8 , intent(out) :: omin,omax
+        integer      , intent(in)   :: npos,halo
+        integer      , intent(in)   :: ipos,ivar
+        integer      , intent(in)   :: wlim
+        real(kind=dp), intent(in)   :: delx(:)
+        real(kind=dp), intent(in)   :: oscl(:,:,:)
+        real(kind=dp), intent(out)  :: omin,omax
 
     !------------------------------------------- variables !
-        integer :: hpos
-        integer :: head,tail
-        integer :: imin,imax
-        real*8  :: deli,delh
-        real*8  :: hh00,hsqr
-        real*8  :: dfx1,dfx2
-        real*8  :: oval
+        integer                     :: hpos
+        integer                     :: head,tail
+        integer                     :: imin,imax
+        real(kind=dp)               :: deli,delh
+        real(kind=dp)               :: hh00,hsqr
+        real(kind=dp)               :: dfx1,dfx2
+        real(kind=dp)               :: oval
         
     !------------------- calc. lower//upper stencil bounds !    
 
@@ -294,20 +294,20 @@
         implicit none
 
     !------------------------------------------- arguments !
-        integer, intent(in)  :: npos,halo
-        integer, intent(in)  :: ipos,ivar
-        integer, intent(in)  :: wlim
-        real*8 , intent(in)  :: delx(1)
-        real*8 , intent(in)  :: oscl(:,:,:)
-        real*8 , intent(out) :: omin,omax
+        integer      , intent(in)   :: npos,halo
+        integer      , intent(in)   :: ipos,ivar
+        integer      , intent(in)   :: wlim
+        real(kind=dp), intent(in)   :: delx(1)
+        real(kind=dp), intent(in)   :: oscl(:,:,:)
+        real(kind=dp), intent(out)  :: omin,omax
 
     !------------------------------------------- variables !
-        integer :: hpos
-        integer :: head,tail
-        integer :: imin,imax
-        real*8  :: delh
-        real*8  :: dfx1,dfx2
-        real*8  :: oval
+        integer                     :: hpos
+        integer                     :: head,tail
+        integer                     :: imin,imax
+        real(kind=dp)               :: delh
+        real(kind=dp)               :: dfx1,dfx2
+        real(kind=dp)               :: oval
     
     !------------------- calc. lower//upper stencil bounds !    
 
@@ -351,7 +351,7 @@
       
     !---------------------------------------- "lower" part !
       
-        delh = 0.d0
+        delh = 0.d0 * delx(1)
 
         do  hpos = ipos-1, imin, -1
         
@@ -380,7 +380,7 @@
       
     !---------------------------------------- "upper" part !     
       
-        delh = 0.d0
+        delh = 0.d0 * delx(1)
         
         do  hpos = ipos+1, imax, +1
         

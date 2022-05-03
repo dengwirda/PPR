@@ -30,10 +30,55 @@
     ! UTIL1D.f90: util. func. for 1-dim. grid manipulation.
     !
     ! Darren Engwirda 
-    ! 31-Mar-2019
-    ! de2363 [at] columbia [dot] edu
+    ! 08-Nov-2021
+    ! d [dot] engwirda [at] gmail [dot] com
     !
     !
+
+    function sum_kbn(xvec) result(ssum)
+
+    ! 
+    ! XVEC  array to sum.
+    ! SSUM  sum(XVEC), via Kahan-Babuska-Neumaier sum .
+    !
+
+        implicit none
+
+        real(kind=dp), intent(in)   :: xvec(:)
+
+        integer         :: ipos
+        real(kind=dp)   :: ssum,serr,stmp
+
+    !------------------------------- compensated summation !
+
+        ssum = 0.d0; serr = 0.d0
+
+        do  ipos = +1, size(xvec) - 0
+    
+            stmp = ssum + xvec(ipos)
+
+            if (abs(ssum) &
+        &       .ge. abs(xvec(ipos))) then
+
+            serr = &
+        &   serr + ((ssum-stmp)+xvec(ipos))
+
+            else
+
+            serr = &
+        &   serr + ((xvec(ipos)-stmp)+ssum)
+
+            end if
+
+            ssum = stmp
+        
+        end do
+
+        ssum = ssum + serr
+
+        return
+
+    end function
 
     subroutine linspace(xxll,xxuu,npos,xpos)
 
@@ -46,12 +91,12 @@
 
         implicit none
 
-        real*8 , intent(in)  :: xxll,xxuu
-        integer, intent(in)  :: npos
-        real*8 , intent(out) :: xpos(:)
+        real(kind=dp), intent(in)   :: xxll,xxuu
+        integer      , intent(in)   :: npos
+        real(kind=dp), intent(out)  :: xpos(:)
 
-        integer   :: ipos
-        real*8    :: xdel
+        integer                     :: ipos
+        real(kind=dp)               :: xdel
 
         xpos(   1) = xxll
         xpos(npos) = xxuu
@@ -81,18 +126,19 @@
 
         implicit none
 
-        real*8 , intent(in)  :: xxll,xxuu
-        integer, intent(in)  :: npos
-        real*8 , intent(out) :: xpos(:)
-        real*8 , intent(in), optional :: frac
+        real(kind=dp), intent(in)   :: xxll,xxuu
+        integer      , intent(in)   :: npos
+        real(kind=dp), intent(out)  :: xpos(:)
+        real(kind=dp), intent(in), optional :: frac
 
-        integer   :: ipos
-        real*8    :: xdel,rand,move
+        integer                     :: ipos
+        real(kind=dp)               :: xdel
+        real(kind=dp)               :: rand,move
 
         if (present(frac)) then
             move = +frac
         else
-            move = 0.33d0
+            move = 3.0d0 / 8.0d0
         end if
 
         xpos(   1) = xxll
@@ -112,10 +158,8 @@
 
             rand = 2.d0 * (rand-.5d0)
             
-            move = rand *  move
-
             xpos(ipos) = &
-        &       xpos(ipos) + move * xdel         
+        &       xpos(ipos) + (move * rand * xdel)         
 
         end do
 

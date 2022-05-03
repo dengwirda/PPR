@@ -30,8 +30,8 @@
     ! FFSL1D.f90: upwind-biased flux-reconstruction scheme.
     !
     ! Darren Engwirda 
-    ! 31-Mar-2019
-    ! de2363 [at] columbia [dot] edu
+    ! 25-Jun-2020
+    ! d [dot] engwirda [at] gmail [dot] com
     !
     !
 
@@ -62,20 +62,20 @@
         implicit none
     
     !------------------------------------------- arguments !
-        integer, intent(in)  :: npos,nvar,ndof
-        class(rmap_work), intent(inout):: work
-        class(rmap_opts), intent(inout):: opts
-        real*8 , intent(in)  :: spac(:)
-        real*8 , intent(in)  :: tDEL
-        logical, intent(in)  :: mask(:)
-        real*8 , intent(in)  :: qbar(:,:,:)
-        real*8 , intent(in)  :: uvel(:)
-        real*8 , intent(out) :: qedg(:,:)
-        class(rcon_ends), intent(in) :: bclo(:)
-        class(rcon_ends), intent(in) :: bchi(:)
+        integer         , intent(in)    :: npos,nvar,ndof
+        class(rmap_work), intent(inout) :: work
+        class(rmap_opts), intent(inout) :: opts
+        real(kind=dp)   , intent(in)    :: spac(:)
+        real(kind=dp)   , intent(in)    :: tDEL
+        logical         , intent(in)    :: mask(:)
+        real(kind=dp)   , intent(in)    :: qbar(:,:,:)
+        real(kind=dp)   , intent(in)    :: uvel(:)
+        real(kind=dp)   , intent(out)   :: qedg(:,:)
+        class(rcon_ends), intent(in)    :: bclo(:)
+        class(rcon_ends), intent(in)    :: bchi(:)
         
     !------------------------------------------- variables !      
-        integer :: head,tail,nprt
+        integer     :: head,tail,nprt
     
         head = +0 ; tail = +0 ; qedg = 0.d+0
     
@@ -232,22 +232,24 @@
         implicit none
         
     !------------------------------------------- arguments !
-        integer, intent(in)  :: npos,nvar,mdof
-        real*8 , intent(in)  :: SPAC(:)
-        real*8 , intent(in)  :: tDEL
-        real*8 , intent(in)  :: uvel(:)
-        real*8 , intent(in)  :: QHAT(:,:,:)
-        real*8 , intent(out) :: qedg(:,:)  
+        integer      , intent(in)   :: npos,nvar,mdof
+        real(kind=dp), intent(in)   :: SPAC(:)
+        real(kind=dp), intent(in)   :: tDEL
+        real(kind=dp), intent(in)   :: uvel(:)
+        real(kind=dp), intent(in)   :: QHAT(:,:,:)
+        real(kind=dp), intent(out)  :: qedg(:,:)  
   
     !------------------------------------------- variables !      
-        integer :: ipos,ivar
-        real*8  :: uCFL,xhat,ss11,ss22,flux
-        real*8  :: vv11(1:5)
-        real*8  :: vv22(1:5)
-        real*8  :: ivec(1:5)
+        integer           :: ipos,ivar
+        real(kind=dp)     :: uCFL,xhat,ss11,ss22,flux
+        real(kind=dp)     :: vv11(1:5)
+        real(kind=dp)     :: vv22(1:5)
+        real(kind=dp)     :: ivec(1:5)
 
     !----------- single-cell, lagrangian-type upwind rcon. !
         
+        vv11 = 0.d+0; vv22 = 0.d+0; ivec = 0.d+0
+
         do  ipos = +2 , npos - 1
         
             if (uvel(ipos) .gt. +0.d0) then

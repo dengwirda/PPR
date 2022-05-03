@@ -30,8 +30,8 @@
     ! OSCL1D.f90: "oscillation-indicators" for WENO interp.
     !
     ! Darren Engwirda 
-    ! 08-Sep-2016
-    ! de2363 [at] columbia [dot] edu
+    ! 25-Oct-2021
+    ! d [dot] engwirda [at] gmail [dot] com
     !
     !
     
@@ -53,14 +53,14 @@
         implicit none
 
     !------------------------------------------- arguments !
-        integer, intent( in) :: npos,nvar,ndof
-        real*8 , intent( in) :: dmin
-        real*8 , intent( in) :: delx(:)
-        real*8 , intent( in) :: fdat(:,:,:)
-        real*8 , intent(out) :: oscl(:,:,:)
+        integer      , intent(in)   :: npos,nvar,ndof
+        real(kind=dp), intent(in)   :: dmin
+        real(kind=dp), intent(in)   :: delx(:)
+        real(kind=dp), intent(in)   :: fdat(:,:,:)
+        real(kind=dp), intent(out)  :: oscl(:,:,:)
 
     !------------------------------------------- variables !
-        integer :: ivar,ipos
+        integer     :: ivar,ipos
         
         if (npos.lt.3) then
     !------------------------------- at least 3 grid-cells !
@@ -80,15 +80,14 @@
 
     !------------------------------- variable grid-spacing !
 
-            call osclv(npos,nvar,ndof,delx, &
-        &              fdat,oscl,dmin)
+            call osclv(npos,nvar,ndof,delx,dmin, &
+        &              fdat,oscl)
         
         else
 
     !------------------------------- constant grid-spacing !
         
-            call osclc(npos,nvar,ndof,delx, &
-        &              fdat,oscl,dmin)
+            call osclc(npos,nvar,ndof,fdat,oscl)
                 
         end if
 
@@ -97,7 +96,7 @@
     end  subroutine
     
     pure subroutine osclv (npos,nvar,ndof,delx,&
-        &                  fdat,oscl,dmin)
+        &                  dmin,fdat,oscl)
 
     !
     ! *this is the variable grid-spacing variant .
@@ -116,22 +115,24 @@
         implicit none
 
     !------------------------------------------- arguments !
-        integer, intent( in) :: npos,nvar,ndof
-        real*8 , intent( in) :: dmin
-        real*8 , intent( in) :: delx(:)
-        real*8 , intent( in) :: fdat(:,:,:)
-        real*8 , intent(out) :: oscl(:,:,:)
+        integer      , intent(in)   :: npos,nvar,ndof
+        real(kind=dp), intent(in)   :: dmin
+        real(kind=dp), intent(in)   :: delx(:)
+        real(kind=dp), intent(in)   :: fdat(:,:,:)
+        real(kind=dp), intent(out)  :: oscl(:,:,:)
 
     !------------------------------------------- variables !
-        integer :: head,tail
-        integer :: ipos,ivar
-        real*8  :: hhll,hhcc,hhrr
-        real*8  :: hhmm,hhrc,hhlc
-        real*8  :: cmat(2,3)
+        integer                     :: head,tail
+        integer                     :: ipos,ivar
+        real(kind=dp)               :: hhll,hhcc,hhrr
+        real(kind=dp)               :: hhmm,hhrc,hhlc
+        real(kind=dp)               :: cmat(+2,+3)
+
+    !--------------------------------------- centred point !
 
         head = +1 ; tail = npos-1
 
-    !--------------------------------------- centred point !
+        if (ndof.lt.1) return
 
         do  ipos = head+1, tail-1
 
@@ -212,8 +213,7 @@
 
     end  subroutine
     
-    pure subroutine osclc (npos,nvar,ndof,delx,&
-        &                  fdat,oscl,dmin)
+    pure subroutine osclc (npos,nvar,ndof,fdat,oscl)
 
     !
     ! *this is the constant grid-spacing variant .
@@ -232,18 +232,18 @@
         implicit none
 
     !------------------------------------------- arguments !
-        integer, intent( in) :: npos,nvar,ndof
-        real*8 , intent( in) :: dmin
-        real*8 , intent( in) :: delx(1)
-        real*8 , intent( in) :: fdat(:,:,:)
-        real*8 , intent(out) :: oscl(:,:,:)
+        integer      , intent( in) :: npos,nvar,ndof
+        real(kind=dp), intent( in) :: fdat(:,:,:)
+        real(kind=dp), intent(out) :: oscl(:,:,:)
 
     !------------------------------------------- variables !
-        integer :: head,tail,ipos,ivar
+        integer     :: head,tail,ipos,ivar
         
+    !-------------------------------------- centred points !
+
         head = +1; tail = npos - 1
 
-    !-------------------------------------- centred points !
+        if (ndof.lt.1) return
 
         do  ipos = 2, npos-2
         do  ivar = 1, nvar-0
