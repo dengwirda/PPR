@@ -58,10 +58,10 @@
             xmid = xpos(ipos+0) * 0.5d+0 &
         &        + xpos(ipos+1) * 0.5d+0
 
-            if (xmid .lt. 0.33d0) then
+            if (xmid .lt. 0.075d0) then
             init(1,1,ipos) = +1.0d0
             else &
-            if (xmid .lt. 0.67d0) then
+            if (xmid .lt. 0.80d0) then
             init(1,1,ipos) = +2.0d0
             else
             init(1,1,ipos) = -0.5d0 * xmid ** 2
@@ -74,6 +74,7 @@
         opts%edge_meth = p5e_method     ! 5th-order edge interp.
         opts%cell_meth = pqm_method     ! PQM method in cells
         opts%cell_lims = mono_limit     ! monotone limiter
+       !opts%wall_lims = weno_limit
         
     !------------------------------ set BC.'s at endpoints !
 

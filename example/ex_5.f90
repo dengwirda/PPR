@@ -13,13 +13,13 @@
 
         implicit none
 
-        integer, parameter :: npos = 43 ! no. edge 
+        integer, parameter :: npos = 37 ! no. edge 
         integer, parameter :: nvar = 1  ! no. variables to build
         integer, parameter :: ndof = 1  ! no. FV DoF per cell
         integer :: ipos,jpos,mdof
 
     !------------------------------- domain discretisation !
-        real(kind=dp) :: xpos(npos),xdel(1)
+        real(kind=dp) :: xpos(npos),xdel(npos-1)
         real(kind=dp) :: xmid,xhat,xloc,floc
         
     !-------------------------------- finite-volume arrays !
@@ -57,7 +57,7 @@
 
     !------------------------------ define a simple domain !
 
-        call linspace(0.d0,1.d0,npos,xpos)
+        call rndspace(0.d0,1.d0,npos,xpos)
         
         xdel(1) = (xpos(npos)&
     &           -  xpos(   1)) / (npos- 1)
@@ -66,6 +66,9 @@
 
         do ipos = +1, npos-1
 
+            xdel(ipos) = xpos(ipos+1) - xpos(ipos)
+            print*, xdel(ipos)
+
             xmid = xpos(ipos+0) * 0.5d+0 &
     &            + xpos(ipos+1) * 0.5d+0
 
@@ -73,13 +76,23 @@
     &   .8d+0 * exp( -75.0d+0 * (xmid - 0.275d+0) ** 2 ) &
     & + .9d+0 * exp(-100.0d+0 * (xmid - 0.500d+0) ** 2 ) &
     & + 1.d+0 * exp(-125.0d+0 * (xmid - 0.725d+0) ** 2 )
+
+
+            if (xmid .lt. 0.075d0) then
+            fdat(1,1,ipos) = +1.0d0
+            else &
+            if (xmid .lt. 0.80d0) then
+            fdat(1,1,ipos) = +2.0d0
+            else
+            fdat(1,1,ipos) = -0.5d0 * xmid ** 2
+            end if
             
         end do
 
     !------------------------------ specify method options !
 
         opts%edge_meth = p5e_method     ! 5th-order edge interp.
-        opts%cell_meth = pqm_method     ! PPM method in cells
+        opts%cell_meth = ppm_method     ! PPM method in cells
         opts%cell_lims = mono_limit     ! monotone limiter
         
     !------------------------------ set BC.'s at endpoints !

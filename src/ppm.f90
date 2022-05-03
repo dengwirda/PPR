@@ -30,7 +30,7 @@
     ! PPM.f90: 1d slope-limited, piecewise parabolic recon.
     !
     ! Darren Engwirda 
-    ! 03-Jul-2020
+    ! 06-Nov-2021
     ! d [dot] engwirda [at] gmail [dot] com
     !
     !
@@ -287,7 +287,6 @@
     &      (fell - ff00) .le. 0.d+0) then
 
             mono = +1
-       
             fell = ff00 - dfds(0)
 
         end if
@@ -296,7 +295,6 @@
     &      (ferr - ff00) .le. 0.d+0) then
 
             mono = +1
-
             ferr = ff00 + dfds(0)
          
         end if
@@ -320,15 +318,6 @@
         turn = -0.5d+0 * lhat(2) &
     &                  / lhat(3)
 
-        fmid = lhat(1) + lhat(2) * turn**1 &
-    &                  + lhat(3) * turn**2
-
-        fmin = min(ffll,ffrr)
-        fmax = max(ffll,ffrr)
-
-        if ((fmid .le. fmax)& 
-    &  .and.(fmid .ge. fmin)) return
-
         if ((turn .ge. -1.d+0)&
     &  .and.(turn .le. +0.d+0)) then
 
@@ -336,12 +325,23 @@
 
     !--------------------------- push TURN onto lower edge !
 
-        fell =              ffll
+        fell =  &              ! steepening...
+    & + (1.0d+0 / 2.0d+0) * ffll &
+    & + (1.0d+0 / 2.0d+0) * fell
 
         ferr =   +3.0d+0  * ff00 &
     &            -2.0d+0  * fell
 
-        lhat( 1 ) = &
+        if((ffrr - ferr) * &   ! double-check monotonicity !
+    &      (ferr - ff00) .le. 0.d+0) then
+            
+        lhat(1) = ff00         ! reduce to PLM
+        lhat(2) = dfds(0)
+        lhat(3) = 0.0d+0
+
+        else
+
+        lhat( 1 ) = &          ! update to PPM
     & + (3.0d+0 / 2.0d+0) * ff00 &
     & - (1.0d+0 / 4.0d+0) *(ferr+fell)
         lhat( 2 ) = &
@@ -350,20 +350,32 @@
     & - (3.0d+0 / 2.0d+0) * ff00 &
     & + (3.0d+0 / 4.0d+0) *(ferr+fell)
 
+        end if
+
         else &
-    &   if ((turn .gt. +0.d+0)&
-    &  .and.(turn .le. +1.d+0)) then
+    &   if ((turn .le. +1.d+0)) then
 
         mono =   +2
 
     !--------------------------- push TURN onto upper edge !
 
-        ferr =              ffrr
+        ferr =  &              ! steepening...
+    & + (1.0d+0 / 2.0d+0) * ffrr &
+    & + (1.0d+0 / 2.0d+0) * ferr
 
         fell =   +3.0d+0  * ff00 &
     &            -2.0d+0  * ferr
 
-        lhat( 1 ) = &
+        if((ffll - fell) * &   ! double-check monotonicity !
+    &      (fell - ff00) .le. 0.d+0) then
+            
+        lhat(1) = ff00         ! reduce to PLM
+        lhat(2) = dfds(0)
+        lhat(3) = 0.0d+0
+        
+        else 
+
+        lhat( 1 ) = &          ! update to PPM
     & + (3.0d+0 / 2.0d+0) * ff00 &
     & - (1.0d+0 / 4.0d+0) *(ferr+fell)
         lhat( 2 ) = &
@@ -372,6 +384,8 @@
     & - (3.0d+0 / 2.0d+0) * ff00 &
     & + (3.0d+0 / 4.0d+0) *(ferr+fell)
    
+        end if
+
         end if
       
         end if

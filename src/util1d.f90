@@ -30,7 +30,7 @@
     ! UTIL1D.f90: util. func. for 1-dim. grid manipulation.
     !
     ! Darren Engwirda 
-    ! 25-Jun-2020
+    ! 08-Nov-2021
     ! d [dot] engwirda [at] gmail [dot] com
     !
     !
@@ -138,7 +138,7 @@
         if (present(frac)) then
             move = +frac
         else
-            move = 0.33d0
+            move = 3.0d0 / 8.0d0
         end if
 
         xpos(   1) = xxll
@@ -158,10 +158,8 @@
 
             rand = 2.d0 * (rand-.5d0)
             
-            move = rand *  move
-
             xpos(ipos) = &
-        &       xpos(ipos) + move * xdel         
+        &       xpos(ipos) + (move * rand * xdel)         
 
         end do
 

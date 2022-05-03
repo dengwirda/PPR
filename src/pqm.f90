@@ -30,7 +30,7 @@
     ! PQM.f90: a 1d slope-limited, piecewise quartic recon.
     !
     ! Darren Engwirda 
-    ! 25-Oct-2021
+    ! 06-Nov-2021
     ! d [dot] engwirda [at] gmail [dot] com
     !
     !
@@ -277,6 +277,7 @@
         integer         :: turn
         real(kind=dp)   :: grad
         real(kind=dp)   :: iflx(+1:+2)
+        real(kind=dp)   :: junk(+1:+3)
         logical         :: haveroot
         
     !-------------------------------- "null" slope-limiter !
@@ -321,6 +322,28 @@
               
         end if
 
+    !----------------------------------- limit edge slopes !
+
+        if (dell * dfds(-1) .lt. 0.d+0) then
+
+            lhat(:) =  0.0d+0
+            call ppmfn(ff00,ffll,ffrr,fell,&
+    &                  ferr,dfds,junk,lhat,&
+    &                  mono)
+            mono = +1; return
+
+        end if
+
+        if (derr * dfds(+1) .lt. 0.d+0) then
+
+            lhat(:) =  0.0d+0
+            call ppmfn(ff00,ffll,ffrr,fell,&
+    &                  ferr,dfds,junk,lhat,&
+    &                  mono)
+            mono = +1; return
+
+        end if
+
     !----------------------------------- limit edge values !
 
         if((ffll - fell) * &
@@ -331,13 +354,6 @@
             
         end if
 
-        if (dell * dfds(-1) .lt. 0.d+0) then
-
-            mono = +1
-            dell = dfds(-1)
-
-        end if
-
         if((ffrr - ferr) * &
     &      (ferr - ff00) .le. 0.d+0) then
 
@@ -346,13 +362,6 @@
             
         end if
     
-        if (derr * dfds(+1) .lt. 0.d+0) then
-
-            mono = +1
-            derr = dfds(+1)
-
-        end if
-
     !----------------------------------- limit cell values !
     
         lhat(1) = &
@@ -385,8 +394,8 @@
 
         turn = +0
 
-        if ( ( iflx(1) .gt. -1.d+0 ) &
-    &  .and. ( iflx(1) .lt. +1.d+0 ) ) then
+        if ( ( iflx(1) .ge. -1.d+0 ) &
+    &  .and. ( iflx(1) .le. +1.d+0 ) ) then
 
     !------------------ check for non-monotonic inflection !
 
@@ -395,7 +404,18 @@
     &+ (iflx(1)**2) * 3.d+0* lhat(4) &
     &+ (iflx(1)**3) * 4.d+0* lhat(5)
 
-        if (grad * dfds(0) .lt. 0.d+0) then
+        if (grad * dfds(0) .le. 0.d+0) then
+
+            ferr = ffrr
+            fell = ffll
+
+            lhat(:) =  0.0d+0
+            call ppmfn(ff00,ffll,ffrr,fell,&
+    &                  ferr,dfds,junk,lhat,&
+    &                  mono)
+            mono = +2; return
+
+
 
             if (abs(dfds(-1)) &
     &      .lt. abs(dfds(+1)) ) then
@@ -412,8 +432,8 @@
 
         end if
             
-        if ( ( iflx(2) .gt. -1.d+0 ) &
-    &  .and. ( iflx(2) .lt. +1.d+0 ) ) then
+        if ( ( iflx(2) .ge. -1.d+0 ) &
+    &  .and. ( iflx(2) .le. +1.d+0 ) ) then
 
     !------------------ check for non-monotonic inflection !
                 
@@ -422,7 +442,19 @@
     &+ (iflx(2)**2) * 3.d+0* lhat(4) &
     &+ (iflx(2)**3) * 4.d+0* lhat(5)
 
-        if (grad * dfds(0) .lt. 0.d+0) then
+        if (grad * dfds(0) .le. 0.d+0) then
+
+            ferr = ffrr
+            fell = ffll
+
+            lhat(:) =  0.0d+0
+            call ppmfn(ff00,ffll,ffrr,fell,&
+    &                  ferr,dfds,junk,lhat,&
+    &                  mono)
+            mono = +2; return
+
+
+
 
             if (abs(dfds(-1)) &
     &      .lt. abs(dfds(+1)) ) then
@@ -444,9 +476,11 @@
         if (turn .eq. -1) then
 
     !------------------ pop inflection points onto -1 edge !
-
+    
             mono = +2
 
+            ferr = ffrr
+            fell = ffll
             derr = &
     &    - ( 5.d+0 /  1.d+0) * ff00 &
     &    + ( 3.d+0 /  1.d+0) * ferr &
@@ -456,28 +490,22 @@
     &    - ( 1.d+0 /  3.d+0) * ferr &
     &    - ( 4.d+0 /  3.d+0) * fell
 
-            if (dell*dfds(-0) .lt. 0.d+0) then
+            if (dell*dfds(-1) .lt. 0.d+0) then
 
-            dell = dfds(-0)
-
-            ferr = &
-    &    + ( 5.d+0 /  1.d+0) * ff00 &
-    &    - ( 4.d+0 /  1.d+0) * fell
-            derr = &
-    &    + (10.d+0 /  1.d+0) * ff00 &
-    &    - (10.d+0 /  1.d+0) * fell
+            lhat(:) =  0.0d+0
+            call ppmfn(ff00,ffll,ffrr,fell,&
+    &                  ferr,dfds,junk,lhat,&
+    &                  mono)
+            mono = +2; return
 
             else &
-    &       if (derr*dfds(+0) .lt. 0.d+0) then
+    &       if (derr*dfds(+1) .lt. 0.d+0) then
 
-            derr = dfds(+0)
-
-            fell = &
-    &    + ( 5.d+0 /  2.d+0) * ff00 &
-    &    - ( 3.d+0 /  2.d+0) * ferr
-            dell = &
-    &    - ( 5.d+0 /  3.d+0) * ff00 &
-    &    + ( 5.d+0 /  3.d+0) * ferr
+            lhat(:) =  0.0d+0
+            call ppmfn(ff00,ffll,ffrr,fell,&
+    &                  ferr,dfds,junk,lhat,&
+    &                  mono)
+            mono = +2; return
 
             end if
 
@@ -504,10 +532,12 @@
 
         if (turn .eq. +1) then
 
-    !------------------ pop inflection points onto -1 edge !
-    
+    !------------------ pop inflection points onto +1 edge !
+
             mono = +2
 
+            ferr = ffrr
+            fell = ffll
             derr = &
     &    - ( 5.d+0 /  3.d+0) * ff00 &
     &    + ( 4.d+0 /  3.d+0) * ferr &
@@ -517,28 +547,22 @@
     &    - ( 2.d+0 /  1.d+0) * ferr &
     &    - ( 3.d+0 /  1.d+0) * fell
 
-            if (dell*dfds(-0) .lt. 0.d+0) then
+            if (dell*dfds(-1) .lt. 0.d+0) then
 
-            dell = dfds(-0)
-
-            ferr = &
-    &    + ( 5.d+0 /  2.d+0) * ff00 &
-    &    - ( 3.d+0 /  2.d+0) * fell
-            derr = &
-    &    + ( 5.d+0 /  3.d+0) * ff00 &
-    &    - ( 5.d+0 /  3.d+0) * fell
+            lhat(:) =  0.0d+0
+            call ppmfn(ff00,ffll,ffrr,fell,&
+    &                  ferr,dfds,junk,lhat,&
+    &                  mono)
+            mono = +2; return
 
             else & 
-    &       if (derr*dfds(+0) .lt. 0.d+0) then
+    &       if (derr*dfds(+1) .lt. 0.d+0) then
 
-            derr = dfds(+0)
-
-            fell = &
-    &    + ( 5.d+0 /  1.d+0) * ff00 &
-    &    - ( 4.d+0 /  1.d+0) * ferr
-            dell = &
-    &    - (10.d+0 /  1.d+0) * ff00 &
-    &    + (10.d+0 /  1.d+0) * ferr
+            lhat(:) =  0.0d+0
+            call ppmfn(ff00,ffll,ffrr,fell,&
+    &                  ferr,dfds,junk,lhat,&
+    &                  mono)
+            mono = +2; return
 
             end if
 

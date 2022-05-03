@@ -70,8 +70,8 @@
 
     !------------------------------ specify method options !
 
-        opts%edge_meth = p5e_method     ! 5th-order edge interp.
-        opts%cell_meth = pqm_method     ! PQM method in cells
+        opts%edge_meth = p3e_method     ! 5th-order edge interp.
+        opts%cell_meth = ppm_method     ! PQM method in cells
         opts%cell_lims = mono_limit     ! monotone limiter
         
     !------------------------------ set BC.'s at endpoints !

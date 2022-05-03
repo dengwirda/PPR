@@ -18,8 +18,8 @@
 
         implicit none
 
-        integer, parameter :: npos = 50 ! no. edge (old grid) 
-        integer, parameter :: ntmp = 40 ! no. edge (new grid)
+        integer, parameter :: npos = 100 ! no. edge (old grid) 
+        integer, parameter :: ntmp = 80 ! no. edge (new grid)
         integer, parameter :: nvar = 1  ! no. variables to remap
         integer, parameter :: ndof = 1  ! no. FV DoF per cell
         integer :: ipos
@@ -52,7 +52,7 @@
     !------------------------------ define a simple domain !
 
         call linspace(0.d0,1.d0,npos,xpos)
-        call linspace(0.d0,1.d0,ntmp,xtmp)
+        call rndspace(0.d0,1.d0,ntmp,xtmp)
 
     !------------------------------ setup some simple data !
 
@@ -70,10 +70,10 @@
 
     !------------------------------ specify method options !
 
-        opts%edge_meth = p5e_method     ! 3rd-order edge interp.
-        opts%cell_meth = pqm_method     ! PPM method in cells
-        opts%cell_lims = null_limit     ! monotone limiter
-        
+        opts%edge_meth = p3e_method     ! 5th-order edge interp.
+        opts%cell_meth = ppm_method     ! PQM method in cells
+        opts%cell_lims = mono_limit     ! monotone limiter
+       
     !------------------------------ set BC.'s at endpoints !
 
         bc_l%bcopt = bcon_loose         ! "loose" = extrapolate
